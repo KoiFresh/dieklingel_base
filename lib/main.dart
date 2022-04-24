@@ -1,4 +1,8 @@
+import 'signaling/signaling_client.dart';
+import 'signaling/signaling_client_mqtt.dart';
 import 'package:flutter/material.dart';
+
+import 'signaling/signaling_message.dart';
 
 void main() {
   runApp(const MyApp());
@@ -48,9 +52,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _counter = 0; 
+  SignalingClient signalingClient = SignalingClientMqtt();
+
+  @override
+  void initState() {
+    signalingClient.connect("dieklingel.com");
+    super.initState();
+  }
 
   void _incrementCounter() {
+    SignalingMessage m = SignalingMessage();
+    m.to = "test";
+    signalingClient.send(m);
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
