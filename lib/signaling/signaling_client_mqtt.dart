@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:mqtt_client/mqtt_browser_client.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
@@ -7,7 +8,7 @@ import 'signaling_client.dart';
 import 'signaling_message.dart';
 
 class SignalingClientMqtt extends EventEmitter implements SignalingClient {
-  MqttServerClient? client;
+  MqttBrowserClient? client;
   @override
   String identifier = "";
   final String _topic;
@@ -15,9 +16,14 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   SignalingClientMqtt({String topic = "com.dieklingel.app/default"})
       : _topic = topic;
 
-  Future<MqttServerClient> createSocket(String url) async {
-    MqttServerClient client =
-        MqttServerClient(url, "com.dieklingel.base.instance");
+  Future<MqttBrowserClient> createSocket(String url, {int port = -1}) async {
+    MqttBrowserClient client =
+        MqttBrowserClient(url, "com.dieklingel.base.instance");
+
+    if (port > 0) {
+      print("use ws");
+      client.port = port;
+    }
     client.keepAlivePeriod = 20;
     client.setProtocolV311();
 
@@ -41,9 +47,9 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   }
 
   @override
-  void connect(String url) async {
+  void connect(String url, {int port = -1}) async {
     client?.disconnect();
-    client = await createSocket(url);
+    client = await createSocket(url, port: port);
   }
 
   @override
