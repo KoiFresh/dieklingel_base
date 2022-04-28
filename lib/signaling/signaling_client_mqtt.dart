@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_browser_client.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
 
 import '../event/event_emitter.dart';
 import 'signaling_client.dart';
@@ -21,7 +20,6 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
         MqttBrowserClient(url, "com.dieklingel.base.instance");
 
     if (port > 0) {
-      print("use ws");
       client.port = port;
     }
     client.keepAlivePeriod = 20;
