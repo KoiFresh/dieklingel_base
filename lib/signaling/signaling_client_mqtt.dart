@@ -15,18 +15,19 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   SignalingClientMqtt({String topic = "com.dieklingel.app/default"})
       : _topic = topic;
 
-  Future<MqttBrowserClient> createSocket(String url, {int port = -1}) async {
-    MqttBrowserClient client =
-        MqttBrowserClient(url, "com.dieklingel.base.instance");
+  Future<MqttBrowserClient> createSocket(String url, int port) async {
+    MqttBrowserClient client = MqttBrowserClient(
+        "ws://dieklingel.com", "com.dieklingel.base.instance");
 
-    if (port > 0) {
-      client.port = port;
-    }
+    client.port = 9001;
     client.keepAlivePeriod = 20;
     client.setProtocolV311();
+    //cant connect without next line
+    client.websocketProtocols = MqttClientConstants.protocolsSingleDefault;
 
     await client.connect();
-    client.subscribe(_topic, MqttQos.exactlyOnce);
+    print("connected");
+    client.subscribe("com.dieklingel.app/default", MqttQos.exactlyOnce);
 
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
       MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
@@ -45,9 +46,9 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   }
 
   @override
-  void connect(String url, {int port = -1}) async {
+  void connect(String url, int port) async {
     client?.disconnect();
-    client = await createSocket(url, port: port);
+    client = await createSocket(url, port);
   }
 
   @override
