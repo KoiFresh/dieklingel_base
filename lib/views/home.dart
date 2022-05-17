@@ -1,6 +1,8 @@
-import 'package:dieklingel_base/rtc/rtc_client.dart';
-import 'package:dieklingel_base/signaling/signaling_client.dart';
-import 'package:dieklingel_base/signaling/signaling_client_mqtt.dart';
+import 'package:dieklingel_base/views/components/sign.dart';
+
+import '../rtc/rtc_client.dart';
+import '../signaling/signaling_client.dart';
+import '../signaling/signaling_client_mqtt_web.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -17,7 +19,7 @@ class Home extends StatefulWidget {
 
 class _Home extends State<Home> {
   final SignalingClient _signalingClient = SignalingClientMqtt();
-  MediaRessource _mediaResource = MediaRessource();
+  final MediaRessource _mediaResource = MediaRessource();
   RtcClient? _rtcClient;
   RTCVideoRenderer renderer = RTCVideoRenderer();
 
@@ -36,9 +38,9 @@ class _Home extends State<Home> {
       "iceServers": [
         {"url": "stun:stun1.l.google.com:19302"},
         {
-          'url': 'turn:192.158.29.39:3478?transport=tcp',
-          'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-          'username': '28224511:1379330808'
+          'url': 'turn:dieklingel.com:3478',
+          'credential': '12345',
+          'username': 'guest'
         },
       ]
     };
@@ -64,9 +66,9 @@ class _Home extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: [
-        CupertinoButton(
-          child: const Text("Hallo welt1"),
+      children: const [
+        /*CupertinoButton(
+          child: const Text("Hallo welt2"),
           onPressed: () async {
             print("Hallo");
             /*await mediaResource.open(true, true);
@@ -77,8 +79,8 @@ class _Home extends State<Home> {
             message.type = SignalingMessageType.error;
             _signalingClient.send(message);
           },
-        ),
-        RTCVideoView(renderer),
+        )*/
+        Sign("Kai"),
       ],
     );
   }
