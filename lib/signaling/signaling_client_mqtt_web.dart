@@ -7,7 +7,7 @@ import 'signaling_client.dart';
 import 'signaling_message.dart';
 
 class SignalingClientMqtt extends EventEmitter implements SignalingClient {
-  MqttBrowserClient? client;
+  MqttClient? client;
   @override
   String identifier = "";
   final String _topic;
@@ -15,7 +15,7 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   SignalingClientMqtt({String topic = "com.dieklingel.app/default"})
       : _topic = topic;
 
-  Future<MqttBrowserClient> createSocket(String url, int port) async {
+  Future<MqttClient> createSocket(String url, int port) async {
     MqttBrowserClient client = MqttBrowserClient(
         "ws://dieklingel.com", "com.dieklingel.base.instance");
 
