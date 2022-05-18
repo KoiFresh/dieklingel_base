@@ -7,7 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
-import '../signaling/signaling_client_mqtt_web.dart';
+import '../signaling/signaling_client_mqtt.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
@@ -51,16 +51,16 @@ class _Home extends State<Home> {
       "urls": ["stun:stun2.l.google.com:19302"]
     };*/
     _rtcClient = RtcClient(_signalingClient, _mediaResource, ice);
-    _rtcClient?.addEventListener(
-        RtcClient.mediaReceived, (track) => {renderer.srcObject = track});
+    _rtcClient?.addEventListener(RtcClient.mediaReceived,
+        (track) => {/*renderer.srcObject = track*/ print("track received")});
     super.initState();
 
-    rootBundle.loadString("config/config.json").then((value) {
+    /*rootBundle.loadString("config/config.json").then((value) {
       final dynamic config = jsonDecode(value);
       setState(() {
         _signs.addAll(config["signs"]);
       });
-    });
+    });*/
   }
 
   void onMessageReceived(SignalingMessage message) async {
