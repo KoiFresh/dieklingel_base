@@ -55,12 +55,12 @@ class _Home extends State<Home> {
         (track) => {/*renderer.srcObject = track*/ print("track received")});
     super.initState();
 
-    /*rootBundle.loadString("config/config.json").then((value) {
+    rootBundle.loadString("config/config.json").then((value) {
       final dynamic config = jsonDecode(value);
       setState(() {
         _signs.addAll(config["signs"]);
       });
-    });*/
+    });
   }
 
   void onMessageReceived(SignalingMessage message) async {
