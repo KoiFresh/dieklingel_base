@@ -76,28 +76,10 @@ class _Home extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-        itemCount: _signs.length,
-        itemBuilder: ((context, index) {
-          return Sign(_signs[index]["text"]);
-        }));
-    /*ListView(
-      children: const [
-        /*CupertinoButton(
-          child: const Text("Hallo welt2"),
-          onPressed: () async {
-            print("Hallo");
-            /*await mediaResource.open(true, true);
-            renderer.srcObject = mediaResource.stream; */
-            SignalingMessage message = SignalingMessage();
-            message.from = "Base";
-            message.to = "";
-            message.type = SignalingMessageType.error;
-            _signalingClient.send(message);
-          },
-        )*/
-        Sign("Kai\nKai", height: 50),
-        Sign("Kai"),
-      ],
-    ); */
+      itemCount: _signs.length,
+      itemBuilder: ((context, index) {
+        return Sign(_signs[index]["text"]);
+      }),
+    );
   }
 }
