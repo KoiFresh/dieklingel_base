@@ -22,6 +22,10 @@
 		{
 			"text": "Text in the Sign",
 			"hash": "#1234567890"
+		},
+		{
+			"text": "Oh two signs",
+			"hash": "#12345678"
 		}
 	]
 }
