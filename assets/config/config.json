@@ -1,0 +1,13 @@
+{
+	"identifier":"main-door#9873",
+	"mqtt": {
+		"address": "127.0.0.1",
+		"port": 9001
+	},
+	"signs": [
+		{
+			"text": "Text in the Sign",
+			"hash": "#1234567890"
+		}
+	]
+}
