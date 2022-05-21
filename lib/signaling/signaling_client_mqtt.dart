@@ -11,22 +11,25 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
   @override
   String identifier = "";
   final String _topic;
+  final String _mqttIdentifiert;
 
-  SignalingClientMqtt({String topic = "com.dieklingel.app/default"})
-      : _topic = topic;
+  SignalingClientMqtt(
+      {String topic = "com.dieklingel.app/default",
+      String mqttIdentifier = "com.dieklingel.base.instance"})
+      : _topic = topic,
+        _mqttIdentifiert = mqttIdentifier;
 
   Future<MqttClient> createSocket(String url, int port) async {
-    MqttBrowserClient client = MqttBrowserClient(
-        "ws://dieklingel.com", "com.dieklingel.base.instance");
+    MqttBrowserClient client = MqttBrowserClient(url, _mqttIdentifiert);
 
-    client.port = 9001;
+    client.port = port;
     client.keepAlivePeriod = 20;
     client.setProtocolV311();
+    client.autoReconnect = true;
     //cant connect without next line
     client.websocketProtocols = MqttClientConstants.protocolsSingleDefault;
 
     await client.connect();
-    print("connected");
     client.subscribe("com.dieklingel.app/default", MqttQos.exactlyOnce);
 
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
