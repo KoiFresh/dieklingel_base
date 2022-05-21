@@ -1,5 +1,5 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class Sign extends StatefulWidget {
   final String name;
@@ -19,6 +19,8 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     vsync: this,
     duration: const Duration(milliseconds: 1000),
   );
+  final AudioCache player = AudioCache();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +30,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
+        player.play("audio/doorbell.wav");
         await _animationController.forward();
         await _animationController.reverse();
       },
