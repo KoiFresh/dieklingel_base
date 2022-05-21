@@ -1,0 +1,31 @@
+{
+	"identifier":"main-door#9873",
+	"webrtc": {
+		"ice": {
+			"iceServers": [
+				{
+					"url": "stun:stun1.l.google.com:19302"
+				},
+				{
+				  "url": "turn:dieklingel.com:3478",
+				  "credential": "12345",
+				  "username": "guest"
+				}
+			]
+		}
+	},
+	"mqtt": {
+		"address": "127.0.0.1",
+		"port": 9001
+	},
+	"signs": [
+		{
+			"text": "Text in the Sign",
+			"hash": "#1234567890"
+		},
+		{
+			"text": "Oh two signs",
+			"hash": "#12345678"
+		}
+	]
+}

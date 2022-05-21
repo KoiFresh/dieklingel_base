@@ -1,9 +1,13 @@
-import 'package:dieklingel_base/rtc/rtc_client.dart';
-import 'package:dieklingel_base/signaling/signaling_client.dart';
-import 'package:dieklingel_base/signaling/signaling_client_mqtt.dart';
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
+import '../views/components/sign.dart';
+import '../rtc/rtc_client.dart';
+import '../signaling/signaling_client.dart';
+import '../signaling/signaling_client_mqtt.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
@@ -17,7 +21,8 @@ class Home extends StatefulWidget {
 
 class _Home extends State<Home> {
   final SignalingClient _signalingClient = SignalingClientMqtt();
-  MediaRessource _mediaResource = MediaRessource();
+  final MediaRessource _mediaResource = MediaRessource();
+  final List<dynamic> _signs = List.empty(growable: true);
   RtcClient? _rtcClient;
   RTCVideoRenderer renderer = RTCVideoRenderer();
 
@@ -36,9 +41,9 @@ class _Home extends State<Home> {
       "iceServers": [
         {"url": "stun:stun1.l.google.com:19302"},
         {
-          'url': 'turn:192.158.29.39:3478?transport=tcp',
-          'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-          'username': '28224511:1379330808'
+          'url': 'turn:dieklingel.com:3478',
+          'credential': '12345',
+          'username': 'guest'
         },
       ]
     };
@@ -46,9 +51,16 @@ class _Home extends State<Home> {
       "urls": ["stun:stun2.l.google.com:19302"]
     };*/
     _rtcClient = RtcClient(_signalingClient, _mediaResource, ice);
-    _rtcClient?.addEventListener(
-        RtcClient.mediaReceived, (track) => {renderer.srcObject = track});
+    _rtcClient?.addEventListener(RtcClient.mediaReceived,
+        (track) => {/*renderer.srcObject = track*/ print("track received")});
     super.initState();
+
+    rootBundle.loadString("config/config.json").then((value) {
+      final dynamic config = jsonDecode(value);
+      setState(() {
+        _signs.addAll(config["signs"]);
+      });
+    });
   }
 
   void onMessageReceived(SignalingMessage message) async {
@@ -63,23 +75,11 @@ class _Home extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CupertinoButton(
-          child: const Text("Hallo welt1"),
-          onPressed: () async {
-            print("Hallo");
-            /*await mediaResource.open(true, true);
-            renderer.srcObject = mediaResource.stream; */
-            SignalingMessage message = SignalingMessage();
-            message.from = "Base";
-            message.to = "";
-            message.type = SignalingMessageType.error;
-            _signalingClient.send(message);
-          },
-        ),
-        RTCVideoView(renderer),
-      ],
+    return ListView.builder(
+      itemCount: _signs.length,
+      itemBuilder: ((context, index) {
+        return Sign(_signs[index]["text"]);
+      }),
     );
   }
 }
