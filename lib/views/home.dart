@@ -29,8 +29,8 @@ class _Home extends State<Home> {
   @override
   void initState() {
     renderer.initialize();
-    _signalingClient.identifier = "flutterbase";
-    _signalingClient.connect("ws://85.214.41.43", 9001);
+    _signalingClient.identifier = "core";
+    _signalingClient.connect("ws://dieklingel.com", 9001);
     _signalingClient.addEventListener(
       "message",
       (message) => {
@@ -55,7 +55,7 @@ class _Home extends State<Home> {
         (track) => {/*renderer.srcObject = track*/ print("track received")});
     super.initState();
 
-    rootBundle.loadString("config/config.json").then((value) {
+    rootBundle.loadString("assets/config/config.json").then((value) {
       final dynamic config = jsonDecode(value);
       setState(() {
         _signs.addAll(config["signs"]);
@@ -64,6 +64,7 @@ class _Home extends State<Home> {
   }
 
   void onMessageReceived(SignalingMessage message) async {
+    print("message");
     switch (message.type) {
       case SignalingMessageType.offer:
         await _mediaResource.open(true, true);

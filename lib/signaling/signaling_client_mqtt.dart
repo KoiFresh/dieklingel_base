@@ -25,25 +25,39 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
     client.port = port;
     client.keepAlivePeriod = 20;
     client.setProtocolV311();
-    client.autoReconnect = true;
     //cant connect without next line
     client.websocketProtocols = MqttClientConstants.protocolsSingleDefault;
 
-    await client.connect();
-    client.subscribe("com.dieklingel.app/default", MqttQos.exactlyOnce);
+    client.onConnected = () {
+      print("connected");
+    };
 
-    client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
-      MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
-      //String topic = c[0].topic;
-      String raw =
-          MqttPublishPayload.bytesToStringAsString(rec.payload.message);
-      SignalingMessage message = SignalingMessage.fromJson(jsonDecode(raw));
-      if (message.to == "") {
-        emit("broadcast", message);
-      } else if (message.to == identifier) {
-        emit("message", message);
-      }
-    });
+    client.onDisconnected = () {
+      print("disconnected");
+      /*Future.delayed(const Duration(seconds: 5), () {
+        print("reconnect");
+        client.connect();
+      });*/
+    };
+    try {
+      await client.connect();
+      client.subscribe("com.dieklingel.app/default", MqttQos.exactlyOnce);
+
+      client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
+        MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
+        //String topic = c[0].topic;
+        String raw =
+            MqttPublishPayload.bytesToStringAsString(rec.payload.message);
+        SignalingMessage message = SignalingMessage.fromJson(jsonDecode(raw));
+        if (message.to == "") {
+          emit("broadcast", message);
+        } else if (message.to == identifier) {
+          emit("message", message);
+        }
+      });
+    } catch (e) {
+      print("error connecting");
+    }
 
     return client;
   }
@@ -60,5 +74,10 @@ class SignalingClientMqtt extends EventEmitter implements SignalingClient {
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(raw);
     client?.publishMessage(_topic, MqttQos.exactlyOnce, builder.payload!);
+  }
+
+  @override
+  void disconnect() {
+    throw UnimplementedError("disconnect is not implemented yet");
   }
 }

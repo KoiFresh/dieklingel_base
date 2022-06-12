@@ -7,14 +7,14 @@ class SignalingMessage {
   SignalingMessage();
 
   SignalingMessage.fromJson(Map<String, dynamic> json)
-      : from = json['from'],
-        to = json['to'],
+      : from = json['sender'],
+        to = json['recipient'],
         type = json['type'],
         data = json['data'];
 
   Map<String, dynamic> toJson() => {
-        'from': from,
-        'to': to,
+        'sender': from,
+        'recipient': to,
         'type': type,
         'data': data,
       };

@@ -5,4 +5,5 @@ abstract class SignalingClient extends EventEmitter {
   String identifier = "";
   void connect(String url, int port);
   void send(SignalingMessage message);
+  void disconnect();
 }
