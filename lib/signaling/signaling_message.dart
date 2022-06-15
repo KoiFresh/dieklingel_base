@@ -1,7 +1,9 @@
+import './signaling_message_type.dart';
+
 class SignalingMessage {
   String from = '';
   String to = '';
-  String type = '';
+  SignalingMessageType type = SignalingMessageType.error;
   Map<String, dynamic> data = {};
 
   SignalingMessage();
@@ -9,13 +11,13 @@ class SignalingMessage {
   SignalingMessage.fromJson(Map<String, dynamic> json)
       : from = json['sender'],
         to = json['recipient'],
-        type = json['type'],
+        type = SignalingMessageType.fromString(json['type']),
         data = json['data'];
 
   Map<String, dynamic> toJson() => {
         'sender': from,
         'recipient': to,
-        'type': type,
+        'type': type.toString(),
         'data': data,
       };
 }

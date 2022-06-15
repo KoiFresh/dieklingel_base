@@ -7,7 +7,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
-import '../signaling/signaling_client_mqtt.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
@@ -20,7 +19,7 @@ class Home extends StatefulWidget {
 }
 
 class _Home extends State<Home> {
-  final SignalingClient _signalingClient = SignalingClientMqtt();
+  final SignalingClient _signalingClient = SignalingClient();
   final MediaRessource _mediaResource = MediaRessource();
   final List<dynamic> _signs = List.empty(growable: true);
   RtcClient? _rtcClient;

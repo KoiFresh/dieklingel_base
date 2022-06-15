@@ -3,7 +3,6 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../event/event_emitter.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
-import '../signaling/signaling_message_type.dart';
 import '../signaling/signaling_client.dart';
 
 class RtcClient extends EventEmitter {

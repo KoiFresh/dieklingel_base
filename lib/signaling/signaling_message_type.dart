@@ -1,8 +1,33 @@
-abstract class SignalingMessageType {
-  static const String offer = "offer";
-  static const String answer = "answer";
-  static const String candidate = "new-ice-candidate";
-  static const String leave = "leave";
-  static const String error = "error";
-  static const String busy = "busy";
+enum SignalingMessageType {
+  offer("offer"),
+  answer("answer"),
+  candidate("new-ice-candidate"),
+  leave("leave"),
+  busy("busy"),
+  error("error");
+
+  static SignalingMessageType fromString(String value) {
+    switch (value) {
+      case "offer":
+        return SignalingMessageType.offer;
+      case "answer":
+        return SignalingMessageType.answer;
+      case "new-ice-candidate":
+        return SignalingMessageType.candidate;
+      case "leave":
+        return SignalingMessageType.leave;
+      case "busy":
+        return SignalingMessageType.busy;
+      default:
+        return SignalingMessageType.error;
+    }
+  }
+
+  const SignalingMessageType(this.value);
+  final String value;
+
+  @override
+  String toString() {
+    return value;
+  }
 }
