@@ -5,10 +5,15 @@ class Sign extends StatefulWidget {
   final String name;
   final int height;
   final Color color;
+  final Function? onTap;
 
-  const Sign(this.name,
-      {Key? key, this.height = 100, this.color = Colors.amber})
-      : super(key: key);
+  const Sign(
+    this.name, {
+    Key? key,
+    this.height = 100,
+    this.color = Colors.amber,
+    this.onTap,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _Sign();
@@ -30,6 +35,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
+        widget.onTap?.call();
         player.play("audio/doorbell.wav");
         await _animationController.forward();
         await _animationController.reverse();
