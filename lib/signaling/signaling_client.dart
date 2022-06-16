@@ -1,82 +1,46 @@
 import 'dart:convert';
-import 'package:mqtt_client/mqtt_browser_client.dart';
+import 'package:dieklingel_base/event/event_emitter.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
-import '../event/event_emitter.dart';
 import 'signaling_message.dart';
+import '../messaging/messaging_client.dart';
 
 class SignalingClient extends EventEmitter {
-  MqttClient? client;
-  @override
-  String identifier = "";
-  final String _topic;
-  final String _mqttIdentifiert;
+  final MessagingClient _messagingClient;
+  final String _signalingTopic;
+  final String _uid;
 
-  SignalingClient(
-      {String topic = "com.dieklingel.app/default",
-      String mqttIdentifier = "com.dieklingel.base.instance"})
-      : _topic = topic,
-        _mqttIdentifiert = mqttIdentifier;
+  String get uid {
+    return _uid;
+  }
 
-  Future<MqttClient> createSocket(String url, int port) async {
-    MqttBrowserClient client = MqttBrowserClient(url, _mqttIdentifiert);
-
-    client.port = port;
-    client.keepAlivePeriod = 20;
-    client.setProtocolV311();
-    //cant connect without next line
-    client.websocketProtocols = MqttClientConstants.protocolsSingleDefault;
-
-    client.onConnected = () {
-      print("connected");
-    };
-
-    client.onDisconnected = () {
-      print("disconnected");
-      /*Future.delayed(const Duration(seconds: 5), () {
-        print("reconnect");
-        client.connect();
-      });*/
-    };
-    try {
-      await client.connect();
-      client.subscribe("com.dieklingel.app/default", MqttQos.exactlyOnce);
-
-      client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
-        MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
-        //String topic = c[0].topic;
-        String raw =
-            MqttPublishPayload.bytesToStringAsString(rec.payload.message);
+  SignalingClient.fromMessagingClient(
+    this._messagingClient,
+    this._signalingTopic,
+    this._uid,
+  ) {
+    _messagingClient.addEventListener("message:$_signalingTopic", (raw) {
+      try {
         SignalingMessage message = SignalingMessage.fromJson(jsonDecode(raw));
-        if (message.to == "") {
+        if ("" == message.recipient) {
           emit("broadcast", message);
-        } else if (message.to == identifier) {
+        } else if (_uid == message.recipient) {
           emit("message", message);
         }
-      });
-    } catch (e) {
-      print("error connecting");
-    }
-
-    return client;
+      } catch (exception) {
+        emit(
+          "error",
+          "could not convert the message into a signaling message;$exception",
+        );
+        print(
+          "could not convert the message into a signaling message;$exception",
+        );
+      }
+    });
   }
 
-  @override
-  void connect(String url, int port) async {
-    client?.disconnect();
-    client = await createSocket(url, port);
-  }
-
-  @override
   void send(SignalingMessage message) {
     String raw = jsonEncode(message.toJson());
-    MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
-    builder.addString(raw);
-    client?.publishMessage(_topic, MqttQos.exactlyOnce, builder.payload!);
-  }
-
-  @override
-  void disconnect() {
-    throw UnimplementedError("disconnect is not implemented yet");
+    _messagingClient.send(_signalingTopic, raw);
   }
 }
