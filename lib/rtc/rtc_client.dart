@@ -7,33 +7,46 @@ import '../signaling/signaling_message_type.dart';
 import '../signaling/signaling_client.dart';
 
 class RtcClient extends EventEmitter {
-  static const String mediaReceived = "media_received";
   static const String incommingCall = "incomming_call";
-  static const String offer = "offer";
 
   final SignalingClient _signalingClient;
   final MediaRessource _mediaRessource;
   final Map<String, dynamic> _iceServers;
-  String to = "";
+  String recipient = "";
   RTCPeerConnection? _rtcPeerConnection;
 
-  RtcClient(
-    SignalingClient signalingClient,
-    MediaRessource mediaRessource,
-    Map<String, dynamic> iceServers,
-  )   : _signalingClient = signalingClient,
-        _mediaRessource = mediaRessource,
-        _iceServers = iceServers {
-    _signalingClient.addEventListener(
-        "message", (data) => {onSignalingMessage(data)});
-  }
-
-  SignalingClient get signalingClient {
-    return _signalingClient;
-  }
-
-  MediaRessource get mediaRessource {
-    return _mediaRessource;
+  RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
+    _signalingClient.addEventListener("message", (message) {
+      if (message is! SignalingMessage) return;
+      switch (message.type) {
+        case SignalingMessageType.offer:
+          emit("offer-received", message);
+          break;
+        case SignalingMessageType.answer:
+          _rtcPeerConnection?.setRemoteDescription(
+            RTCSessionDescription(
+              message.data['sdp'],
+              message.data['type'],
+            ),
+          );
+          break;
+        case SignalingMessageType.candidate:
+          _rtcPeerConnection?.addCandidate(
+            RTCIceCandidate(
+              message.data['candidate'],
+              message.data['sdpMid'],
+              message.data['sdpMLineIndex'],
+            ),
+          );
+          break;
+        case SignalingMessageType.busy:
+        case SignalingMessageType.leave:
+          abort();
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   Future<RTCPeerConnection> _createRtcPeerConnection() async {
@@ -44,58 +57,24 @@ class RtcClient extends EventEmitter {
         connection.addTrack(track, stream);
       });
     }
-    connection.onIceCandidate = onNewIceCandidateFound;
-    connection.onConnectionState = onConnectionStateChanged;
-    connection.onTrack = onTrackReceived;
+    connection.onIceCandidate = _onNewIceCandidateFound;
+    connection.onConnectionState = _onConnectionStateChanged;
+    connection.onTrack = _onTrackReceived;
     return connection;
   }
 
-  void onSignalingBroadcast(SignalingMessage message) {
-    // TODO: implement method
-  }
-
-  void onSignalingMessage(SignalingMessage message) {
-    switch (message.type) {
-      case SignalingMessageType.offer:
-        if (null == _rtcPeerConnection) {
-          emit(RtcClient.offer, message);
-        }
-        break;
-      case SignalingMessageType.answer:
-        _rtcPeerConnection?.setRemoteDescription(
-          RTCSessionDescription(
-            message.data['sdp'],
-            message.data['type'],
-          ),
-        );
-        break;
-      case SignalingMessageType.candidate:
-        _rtcPeerConnection?.addCandidate(
-          RTCIceCandidate(
-            message.data['candidate'],
-            message.data['sdpMid'],
-            message.data['sdpMLineIndex'],
-          ),
-        );
-        break;
-      case SignalingMessageType.busy:
-      case SignalingMessageType.leave:
-        abort();
-        break;
-    }
-  }
-
-  void onNewIceCandidateFound(RTCIceCandidate candidate) {
+  void _onNewIceCandidateFound(RTCIceCandidate candidate) {
     if (null == _rtcPeerConnection) return;
     SignalingMessage message = SignalingMessage();
-    message.from = _signalingClient.identifier;
-    message.to = to;
+    message.sender = _signalingClient.uid;
+    message.recipient = recipient;
     message.type = SignalingMessageType.candidate;
     message.data = candidate.toMap();
     _signalingClient.send(message);
   }
 
-  void onConnectionStateChanged(RTCPeerConnectionState state) {
+  void _onConnectionStateChanged(RTCPeerConnectionState state) {
+    emit("state-changed", state.toString());
     switch (state) {
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
         hangup();
@@ -105,19 +84,19 @@ class RtcClient extends EventEmitter {
     }
   }
 
-  void onTrackReceived(RTCTrackEvent event) {
-    emit(RtcClient.mediaReceived, event.streams[0]);
+  void _onTrackReceived(RTCTrackEvent event) {
+    emit("mediatrack-received", event.streams[0]);
   }
 
   Future<void> invite(String other,
       {Map<String, dynamic> options = const {}}) async {
     RTCPeerConnection connection = await _createRtcPeerConnection();
-    to = other;
+    recipient = other;
     RTCSessionDescription offer = await connection.createOffer(options);
     await connection.setLocalDescription(offer);
     SignalingMessage message = SignalingMessage();
-    message.to = other;
-    message.from = _signalingClient.identifier;
+    message.recipient = other;
+    message.sender = _signalingClient.uid;
     message.type = SignalingMessageType.offer;
     message.data = offer.toMap();
     _rtcPeerConnection = connection;
@@ -127,7 +106,7 @@ class RtcClient extends EventEmitter {
   Future<void> answer(SignalingMessage offer) async {
     if (offer.type != SignalingMessageType.offer) return;
     RTCPeerConnection connection = await _createRtcPeerConnection();
-    to = offer.from;
+    recipient = offer.sender;
     await connection.setRemoteDescription(RTCSessionDescription(
       offer.data["sdp"],
       offer.data["type"],
@@ -135,8 +114,8 @@ class RtcClient extends EventEmitter {
     RTCSessionDescription answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
     SignalingMessage message = SignalingMessage();
-    message.from = _signalingClient.identifier;
-    message.to = offer.from;
+    message.sender = _signalingClient.uid;
+    message.recipient = offer.sender;
     message.type = SignalingMessageType.answer;
     message.data = answer.toMap();
     _rtcPeerConnection = connection;
@@ -146,8 +125,8 @@ class RtcClient extends EventEmitter {
   Future<void> hangup() async {
     if (null == _rtcPeerConnection) return;
     SignalingMessage message = SignalingMessage();
-    message.from = _signalingClient.identifier;
-    message.to = to;
+    message.sender = _signalingClient.uid;
+    message.recipient = recipient;
     message.type = SignalingMessageType.leave;
     _signalingClient.send(message);
     abort();
@@ -158,6 +137,6 @@ class RtcClient extends EventEmitter {
     await _rtcPeerConnection?.close();
     _mediaRessource.close();
     _rtcPeerConnection = null;
-    to = "";
+    recipient = "";
   }
 }
