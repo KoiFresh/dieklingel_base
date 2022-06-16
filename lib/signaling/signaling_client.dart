@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:dieklingel_base/event/event_emitter.dart';
-import 'package:mqtt_client/mqtt_client.dart';
 
 import 'signaling_message.dart';
 import '../messaging/messaging_client.dart';

@@ -7,8 +7,6 @@ import '../signaling/signaling_message_type.dart';
 import '../signaling/signaling_client.dart';
 
 class RtcClient extends EventEmitter {
-  static const String incommingCall = "incomming_call";
-
   final SignalingClient _signalingClient;
   final MediaRessource _mediaRessource;
   final Map<String, dynamic> _iceServers;
