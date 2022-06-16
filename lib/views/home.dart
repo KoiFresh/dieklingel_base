@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -10,6 +11,7 @@ import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
+import '../messaging/messaging_client.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,16 +21,21 @@ class Home extends StatefulWidget {
 }
 
 class _Home extends State<Home> {
-  final SignalingClient _signalingClient = SignalingClient();
+  late final MessagingClient _messagingClient;
+  late final SignalingClient _signalingClient;
+  late final RtcClient _rtcClient;
   final MediaRessource _mediaResource = MediaRessource();
   final List<dynamic> _signs = List.empty(growable: true);
-  RtcClient? _rtcClient;
-  RTCVideoRenderer renderer = RTCVideoRenderer();
+
+  final RTCVideoRenderer _renderer = RTCVideoRenderer();
 
   @override
   void initState() {
-    renderer.initialize();
-    _signalingClient.identifier = "core";
+    _renderer.initialize();
+    init();
+    super.initState();
+
+    /*_signalingClient.identifier = "core";
     _signalingClient.connect("ws://dieklingel.com", 9001);
     _signalingClient.addEventListener(
       "message",
@@ -53,33 +60,68 @@ class _Home extends State<Home> {
     _rtcClient?.addEventListener(RtcClient.mediaReceived,
         (track) => {/*renderer.srcObject = track*/ print("track received")});
     super.initState();
-
-    rootBundle.loadString("assets/config/config.json").then((value) {
-      final dynamic config = jsonDecode(value);
-      setState(() {
-        _signs.addAll(config["signs"]);
-      });
-    });
+  */
+    //client.addEventListener("message:test/", (data) => print(data));
+    //
+    //client.addEventListener("message", (data) => print(data));
   }
 
-  void onMessageReceived(SignalingMessage message) async {
-    print("message");
-    switch (message.type) {
-      case SignalingMessageType.offer:
-        await _mediaResource.open(true, true);
-        print("answer");
-        _rtcClient?.answer(message);
-        break;
-    }
+  void init() async {
+    // init configuration
+    String configPath = "assets/config/config.json";
+    String rawConfig = await rootBundle.loadString(configPath);
+    dynamic config = jsonDecode(rawConfig);
+    setState(() {
+      _signs.addAll(config["signs"]);
+    });
+    // init messaging client
+    _messagingClient = MessagingClient("127.0.0.1", 9001);
+    await _messagingClient.connect();
+    String uid = config["uid"] ?? "none";
+    _messagingClient.send(
+      "com.dieklingel/$uid/system/log",
+      "system initialized with uid: $uid",
+    );
+    _messagingClient.send(
+      "com.dieklingel/$uid/io/display/state",
+      "on",
+    );
+    // init signaling client
+    _signalingClient = SignalingClient.fromMessagingClient(
+      _messagingClient,
+      "com.dieklingel/$uid/rtc/signaling",
+      uid,
+    );
+    // init rtc client
+    _rtcClient = RtcClient(
+      _signalingClient,
+      _mediaResource,
+      config["webrtc"]["ico"],
+    );
+    _rtcClient.addEventListener("offer-received", (offer) async {
+      await _mediaResource.open(true, true);
+      _rtcClient.answer(offer);
+    });
+    _rtcClient.addEventListener("mediatrack-received", (track) {
+      _renderer.srcObject = track;
+    });
+    _rtcClient.addEventListener("state-changed", (state) {
+      _messagingClient.send(
+        "com.dieklingel/$uid/rtc/call/state",
+        state.toString(),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: _signs.length,
-      itemBuilder: ((context, index) {
-        return Sign(_signs[index]["text"]);
-      }),
+      itemBuilder: (context, index) {
+        return Sign(
+          _signs[index]["text"],
+        );
+      },
     );
   }
 }
