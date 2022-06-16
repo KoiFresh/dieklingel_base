@@ -18,7 +18,7 @@ class MessagingClient extends EventEmitter {
     }
     if (event.startsWith("message:")) {
       String topic = event.replaceFirst("message:", "");
-      _client!.subscribe(event, MqttQos.exactlyOnce);
+      _client!.subscribe(topic, MqttQos.exactlyOnce);
     }
     super.addEventListener(event, callback);
   }
