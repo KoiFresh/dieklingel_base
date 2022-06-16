@@ -75,7 +75,10 @@ class _Home extends State<Home> {
       _signs.addAll(config["signs"]);
     });
     // init messaging client
-    _messagingClient = MessagingClient("127.0.0.1", 9001);
+    _messagingClient = MessagingClient(
+      config["mqtt"]["address"] as String,
+      config["mqtt"]["port"] as int,
+    );
     await _messagingClient.connect();
     String uid = config["uid"] ?? "none";
     _messagingClient.send(
@@ -96,7 +99,7 @@ class _Home extends State<Home> {
     _rtcClient = RtcClient(
       _signalingClient,
       _mediaResource,
-      config["webrtc"]["ico"],
+      config["webrtc"]["ice"],
     );
     _rtcClient.addEventListener("offer-received", (offer) async {
       await _mediaResource.open(true, true);
