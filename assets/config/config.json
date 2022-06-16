@@ -1,5 +1,5 @@
 {
-	"identifier":"main-door#9873",
+	"uid":"main-door:9873",
 	"webrtc": {
 		"ice": {
 			"iceServers": [
