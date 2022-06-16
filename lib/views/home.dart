@@ -4,6 +4,7 @@ import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
@@ -88,6 +89,22 @@ class _Home extends State<Home> {
     _messagingClient.send(
       "com.dieklingel/$uid/io/display/state",
       "on",
+    );
+    _messagingClient.addEventListener(
+      "message:com.dieklingel/$uid/firebase/notification/token/add",
+      (raw) async {
+        print("n");
+        Map<String, dynamic> message = jsonDecode(raw);
+        if (null == message["hash"] || null == message["token"]) return;
+        SharedPreferences preferences = await SharedPreferences.getInstance();
+        String hash = message["hash"];
+        String token = message["token"];
+        preferences.setString(hash, token);
+        _messagingClient.send(
+          "com.dieklingel/$uid/system/log",
+          "token for hash '$hash' set",
+        );
+      },
     );
     // init signaling client
     _signalingClient = SignalingClient.fromMessagingClient(
