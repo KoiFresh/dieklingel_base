@@ -36,6 +36,7 @@ dependencies:
   mqtt_client: ^9.6.7
   flutter_webrtc: ^0.8.6
   audioplayers: ^0.20.1
+  shared_preferences: ^2.0.15
 
 dev_dependencies:
   flutter_test:
