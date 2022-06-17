@@ -25,6 +25,7 @@ class _Home extends State<Home> {
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
   late final RtcClient _rtcClient;
+  late final String uid;
   final MediaRessource _mediaResource = MediaRessource();
   final List<dynamic> _signs = List.empty(growable: true);
 
@@ -81,7 +82,7 @@ class _Home extends State<Home> {
       config["mqtt"]["port"] as int,
     );
     await _messagingClient.connect();
-    String uid = config["uid"] ?? "none";
+    uid = config["uid"] ?? "none";
     _messagingClient.send(
       "com.dieklingel/$uid/system/log",
       "system initialized with uid: $uid",
@@ -93,7 +94,6 @@ class _Home extends State<Home> {
     _messagingClient.addEventListener(
       "message:com.dieklingel/$uid/firebase/notification/token/add",
       (raw) async {
-        print("n");
         Map<String, dynamic> message = jsonDecode(raw);
         if (null == message["hash"] || null == message["token"]) return;
         SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -120,6 +120,10 @@ class _Home extends State<Home> {
     );
     _rtcClient.addEventListener("offer-received", (offer) async {
       await _mediaResource.open(true, true);
+      _messagingClient.send(
+        "com.dieklingel/$uid/system/log",
+        "request to start rtc acknowledged",
+      );
       _rtcClient.answer(offer);
     });
     _rtcClient.addEventListener("mediatrack-received", (track) {
@@ -140,6 +144,12 @@ class _Home extends State<Home> {
       itemBuilder: (context, index) {
         return Sign(
           _signs[index]["text"],
+          onTap: () {
+            _messagingClient.send(
+              "com.dieklingel/$uid/system/log",
+              "the sign was clicked",
+            );
+          },
         );
       },
     );
