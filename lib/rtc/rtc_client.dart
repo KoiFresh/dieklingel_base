@@ -1,3 +1,4 @@
+import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../event/event_emitter.dart';
@@ -18,9 +19,11 @@ class RtcClient extends EventEmitter {
       if (message is! SignalingMessage) return;
       switch (message.type) {
         case SignalingMessageType.offer:
+          emit("state-changed", RtcConnectionState.invited);
           emit("offer-received", message);
           break;
         case SignalingMessageType.answer:
+          emit("state-changed", RtcConnectionState.connecting);
           _rtcPeerConnection?.setRemoteDescription(
             RTCSessionDescription(
               message.data['sdp'],
@@ -39,6 +42,7 @@ class RtcClient extends EventEmitter {
           break;
         case SignalingMessageType.busy:
         case SignalingMessageType.leave:
+          emit("state-changed", RtcConnectionState.disconnected);
           abort();
           break;
         default:
@@ -72,8 +76,11 @@ class RtcClient extends EventEmitter {
   }
 
   void _onConnectionStateChanged(RTCPeerConnectionState state) {
-    emit("state-changed", state.toString());
+    // emit("state-changed", state.toString());
     switch (state) {
+      case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+        emit("state-changed", RtcConnectionState.connected);
+        break;
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
         hangup();
         break;
@@ -88,6 +95,7 @@ class RtcClient extends EventEmitter {
 
   Future<void> invite(String other,
       {Map<String, dynamic> options = const {}}) async {
+    emit("state-changed", RtcConnectionState.connecting);
     RTCPeerConnection connection = await _createRtcPeerConnection();
     recipient = other;
     RTCSessionDescription offer = await connection.createOffer(options);
@@ -103,6 +111,7 @@ class RtcClient extends EventEmitter {
 
   Future<void> answer(SignalingMessage offer) async {
     if (offer.type != SignalingMessageType.offer) return;
+    emit("state-changed", RtcConnectionState.connecting);
     RTCPeerConnection connection = await _createRtcPeerConnection();
     recipient = offer.sender;
     await connection.setRemoteDescription(RTCSessionDescription(
