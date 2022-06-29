@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:camera/camera.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -24,6 +25,7 @@ class _Home extends State<Home> {
   late final SignalingClient _signalingClient;
   late final RtcClient _rtcClient;
   late final String uid;
+  late final dynamic config;
   final MediaRessource _mediaResource = MediaRessource();
   final List<dynamic> _signs = List.empty(growable: true);
 
@@ -34,6 +36,7 @@ class _Home extends State<Home> {
     _renderer.initialize();
     init();
     super.initState();
+    //WidgetsFlutterBinding.ensureInitialized();
 
     /*_signalingClient.identifier = "core";
     _signalingClient.connect("ws://dieklingel.com", 9001);
@@ -70,7 +73,7 @@ class _Home extends State<Home> {
     // init configuration
     String configPath = "assets/config/config.json";
     String rawConfig = await rootBundle.loadString(configPath);
-    dynamic config = jsonDecode(rawConfig);
+    config = jsonDecode(rawConfig);
     setState(() {
       _signs.addAll(config["signs"]);
     });
@@ -136,6 +139,30 @@ class _Home extends State<Home> {
         state.toString(),
       );
     });
+    // init camera
+    //
+    //final CameraDescription camera = cameras.first;
+    /*_controller = CameraController(
+      camera,
+      ResolutionPreset.medium,
+    );*/
+    //await _controller.initialize();
+    //_controller.
+  }
+
+  Future<String> takePicture() async {
+    final List<CameraDescription> cameras = await availableCameras();
+    final CameraDescription camera = cameras.first;
+    final CameraController controller = CameraController(
+      camera,
+      ResolutionPreset.medium,
+    );
+    await controller.initialize();
+    XFile image = await controller.takePicture();
+    List<int> bytes = await image.readAsBytes();
+    String base64 = base64Encode(bytes);
+    await controller.dispose();
+    return "data:image/png;base64,$base64";
   }
 
   @override
@@ -153,12 +180,18 @@ class _Home extends State<Home> {
             );
             SharedPreferences prefs = await SharedPreferences.getInstance();
             List<String>? tokens = prefs.getStringList("sign/$hash");
-            if (null == tokens) return;
+            if (null == tokens) {
+              print("no tokens");
+              return;
+            }
+            String snapshot = config["notification"]["snapshot"] == true
+                ? await takePicture()
+                : "";
             Map<String, dynamic> message = {
               "tokens": tokens,
-              "title": "Push Notification",
-              "body": "Yippe",
-              "image": "",
+              "title": "Jemand steht vor deiner Tuer ($uid)",
+              "body": "https://dieklingel.com/",
+              "image": snapshot,
             };
             _messagingClient.send(
               "com.dieklingel/$uid/firebase/notification/send",
