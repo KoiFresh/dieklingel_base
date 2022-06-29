@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 
 class Sign extends StatefulWidget {
   final String name;
+  final String hash;
   final int height;
   final Color color;
-  final Function? onTap;
+  final Function(String hash)? onTap;
 
   const Sign(
-    this.name, {
+    this.name,
+    this.hash, {
     Key? key,
     this.height = 100,
     this.color = Colors.amber,
@@ -35,7 +37,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        widget.onTap?.call();
+        widget.onTap?.call(widget.hash);
         player.play("audio/doorbell.wav");
         await _animationController.forward();
         await _animationController.reverse();

@@ -37,6 +37,8 @@ dependencies:
   flutter_webrtc: ^0.8.6
   audioplayers: ^0.20.1
   shared_preferences: ^2.0.15
+  http: ^0.13.4
+  camera: ^0.9.8+1
 
 dev_dependencies:
   flutter_test:

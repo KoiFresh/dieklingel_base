@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dieklingel_base/messaging/messaging_client.dart';
+import 'package:dieklingel_base/notification/notification_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -10,8 +11,6 @@ import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
-import '../signaling/signaling_message.dart';
-import '../signaling/signaling_message_type.dart';
 import '../messaging/messaging_client.dart';
 
 class Home extends StatefulWidget {
@@ -96,10 +95,13 @@ class _Home extends State<Home> {
       (raw) async {
         Map<String, dynamic> message = jsonDecode(raw);
         if (null == message["hash"] || null == message["token"]) return;
-        SharedPreferences preferences = await SharedPreferences.getInstance();
+        SharedPreferences prefs = await SharedPreferences.getInstance();
         String hash = message["hash"];
         String token = message["token"];
-        preferences.setString(hash, token);
+        List<String>? tokens = prefs.getStringList("sign/$hash");
+        tokens ??= List<String>.empty(growable: true);
+        if (!tokens.contains(token)) tokens.add(token);
+        prefs.setStringList("sign/$hash", tokens);
         _messagingClient.send(
           "com.dieklingel/$uid/system/log",
           "token for hash '$hash' set",
@@ -144,10 +146,28 @@ class _Home extends State<Home> {
       itemBuilder: (context, index) {
         return Sign(
           _signs[index]["text"],
-          onTap: () {
+          _signs[index]["hash"],
+          onTap: (String hash) async {
             _messagingClient.send(
               "com.dieklingel/$uid/system/log",
               "the sign was clicked",
+            );
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            List<String>? tokens = prefs.getStringList("sign/$hash");
+            if (null == tokens) return;
+            Map<String, dynamic> message = {
+              "tokens": tokens,
+              "title": "Push Notification",
+              "body": "Yippe",
+              "image": "",
+            };
+            _messagingClient.send(
+              "com.dieklingel/$uid/firebase/notification/send",
+              jsonEncode(message),
+            );
+            _messagingClient.send(
+              "com.dieklingel/$uid/system/log",
+              "notification send",
             );
           },
         );
