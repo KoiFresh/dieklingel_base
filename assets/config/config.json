@@ -18,6 +18,17 @@
 		"address": "127.0.0.1",
 		"port": 9001
 	},
+	"notification": {
+		"snapshot": true
+	},
+	"viewport":{
+		"clip":{
+			"top": 10,
+			"right": 20,
+			"bottom": 30,
+			"left": 40
+		}
+	},
 	"signs": [
 		{
 			"text": "Text in the Sign",
