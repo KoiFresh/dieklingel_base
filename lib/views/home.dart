@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dieklingel_base/messaging/messaging_client.dart';
-import 'package:dieklingel_base/notification/notification_center.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/services.dart' show rootBundle;
