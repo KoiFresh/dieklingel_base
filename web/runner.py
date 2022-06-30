@@ -13,8 +13,8 @@ def main():
             exit()
     eel.init(DIRECTORY)
     # close callback is not called if there is no ./eel.js script in the index.html
-    #eel.start('index.html', port=PORT, cmdline_args=['--kiosk'] ,close_callback=close_callback)
-    eel.start('index.html', port=PORT,close_callback=close_callback)
+    eel.start('index.html', port=PORT, cmdline_args=['--kiosk'] ,close_callback=close_callback)
+    #eel.start('index.html', port=PORT,close_callback=close_callback)
 
 if __name__ == "__main__":
     setproctitle.setproctitle("dieklingel-runner")
