@@ -24,9 +24,9 @@
 	"viewport":{
 		"clip":{
 			"top": 10,
-			"right": 20,
-			"bottom": 30,
-			"left": 40
+			"right": 10,
+			"bottom": 10,
+			"left": 10
 		}
 	},
 	"signs": [
@@ -35,7 +35,7 @@
 			"hash": "#1234567890"
 		},
 		{
-			"text": "Oh two signs",
+			"text": "Oh two signs222",
 			"hash": "#kai"
 		}
 	]

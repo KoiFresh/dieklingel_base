@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 class Sign extends StatefulWidget {
   final String name;
   final String hash;
-  final int height;
+  final double height;
   final Color color;
   final Function(String hash)? onTap;
 
   const Sign(
     this.name,
-    this.hash, {
+    this.hash,
+    this.height, {
     Key? key,
-    this.height = 100,
     this.color = Colors.amber,
     this.onTap,
   }) : super(key: key);
@@ -45,9 +45,10 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
       child: Container(
         width: double.infinity,
         color: widget.color,
-        height: MediaQuery.of(context).size.height * widget.height / 100,
+        height: widget.height,
         padding: EdgeInsets.all(
-          MediaQuery.of(context).size.height * widget.height / 100 / 10,
+          widget.height / 100,
+          //MediaQuery.of(context).size.height * widget.height / 100 / 10,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -57,7 +58,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  top: 24,
+                  top: widget.height / 35,
                   child: RotationTransition(
                     alignment: Alignment.topCenter,
                     turns: Tween(begin: 0.0, end: -0.02)
@@ -66,10 +67,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                     child: Image.asset(
                       "assets/images/clapper.png",
                       fit: BoxFit.fitHeight,
-                      height: MediaQuery.of(context).size.height *
-                          widget.height /
-                          100 /
-                          4,
+                      height: widget.height / 4,
                     ),
                   ),
                 ),
@@ -82,10 +80,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                     child: Image.asset(
                       "assets/images/bell.png",
                       fit: BoxFit.fitHeight,
-                      height: MediaQuery.of(context).size.height *
-                          widget.height /
-                          100 /
-                          4,
+                      height: widget.height / 4,
                     ),
                   ),
                 ),
@@ -95,10 +90,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
               widget.name,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: MediaQuery.of(context).size.height *
-                    widget.height /
-                    100 /
-                    12,
+                fontSize: widget.height / 12,
               ),
             ),
           ],

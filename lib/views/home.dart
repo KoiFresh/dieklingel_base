@@ -173,9 +173,16 @@ class _Home extends State<Home> {
     return ListView.builder(
       itemCount: _signs.length,
       itemBuilder: (context, index) {
+        //print(MediaQuery.of(context).size.height -
+        //    MediaQuery.o);
+        final double screenHeight = MediaQuery.of(context).size.height;
+        final double clipTop = config["viewport"]["clip"]["top"];
+        final double clipBottom = config["viewport"]["clip"]["bottom"];
+        final double signHeigh = screenHeight - clipTop - clipBottom;
         return Sign(
           _signs[index]["text"],
           _signs[index]["hash"],
+          signHeigh,
           onTap: (String hash) async {
             _messagingClient.send(
               "com.dieklingel/$uid/system/log",
