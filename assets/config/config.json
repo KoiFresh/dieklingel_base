@@ -19,7 +19,7 @@
 		"port": 9001
 	},
 	"notification": {
-		"snapshot": true
+		"snapshot": false
 	},
 	"viewport":{
 		"clip":{
@@ -31,11 +31,11 @@
 	},
 	"signs": [
 		{
-			"text": "Steffi, Sven & Elsa<br/><span style='font-weight: bold;'>Schoch</span>",
+			"text": "<span style='font-weight: bold;'>Hello World!</span>",
 			"hash": "#mysign"
 		},
 		{
-			"text": "I am a Sign, too",
+			"text": "I am a Sign!",
 			"hash": "#asign"
 		}
 	]
