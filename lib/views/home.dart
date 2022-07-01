@@ -152,6 +152,9 @@ class _Home extends State<Home> {
 
   Future<String> takePicture() async {
     final List<CameraDescription> cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      return "";
+    }
     final CameraDescription camera = cameras.first;
     final CameraController controller = CameraController(
       camera,
