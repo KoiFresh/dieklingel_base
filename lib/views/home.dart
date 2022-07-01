@@ -36,37 +36,6 @@ class _Home extends State<Home> {
     _renderer.initialize();
     init();
     super.initState();
-    //WidgetsFlutterBinding.ensureInitialized();
-
-    /*_signalingClient.identifier = "core";
-    _signalingClient.connect("ws://dieklingel.com", 9001);
-    _signalingClient.addEventListener(
-      "message",
-      (message) => {
-        if (message is SignalingMessage) {onMessageReceived(message)}
-      },
-    );
-    var ice = <String, dynamic>{
-      "iceServers": [
-        {"url": "stun:stun1.l.google.com:19302"},
-        {
-          'url': 'turn:dieklingel.com:3478',
-          'credential': '12345',
-          'username': 'guest'
-        },
-      ]
-    };
-    /*var ice = {
-      "urls": ["stun:stun2.l.google.com:19302"]
-    };*/
-    _rtcClient = RtcClient(_signalingClient, _mediaResource, ice);
-    _rtcClient?.addEventListener(RtcClient.mediaReceived,
-        (track) => {/*renderer.srcObject = track*/ print("track received")});
-    super.initState();
-  */
-    //client.addEventListener("message:test/", (data) => print(data));
-    //
-    //client.addEventListener("message", (data) => print(data));
   }
 
   void init() async {
@@ -139,15 +108,6 @@ class _Home extends State<Home> {
         state.toString(),
       );
     });
-    // init camera
-    //
-    //final CameraDescription camera = cameras.first;
-    /*_controller = CameraController(
-      camera,
-      ResolutionPreset.medium,
-    );*/
-    //await _controller.initialize();
-    //_controller.
   }
 
   Future<String> takePicture() async {
@@ -173,8 +133,6 @@ class _Home extends State<Home> {
     return ListView.builder(
       itemCount: _signs.length,
       itemBuilder: (context, index) {
-        //print(MediaQuery.of(context).size.height -
-        //    MediaQuery.o);
         final double screenHeight = MediaQuery.of(context).size.height;
         final double clipTop = config["viewport"]["clip"]["top"];
         final double clipBottom = config["viewport"]["clip"]["bottom"];
