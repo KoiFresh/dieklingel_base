@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class Sign extends StatefulWidget {
   final String name;
@@ -86,12 +87,12 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                 ),
               ],
             ),
-            Text(
-              widget.name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: widget.height / 12,
-              ),
+            Html(
+              data: """
+                  <div style='text-align: center; font-size: 56px'>
+                  ${widget.name}
+                  </div>
+                  """,
             ),
           ],
         ),

@@ -31,12 +31,12 @@
 	},
 	"signs": [
 		{
-			"text": "Text in the Sign",
-			"hash": "#1234567890"
+			"text": "Steffi, Sven & Elsa<br/><span style='font-weight: bold;'>Schoch</span>",
+			"hash": "#mysign"
 		},
 		{
-			"text": "Oh two signs222",
-			"hash": "#kai"
+			"text": "I am a Sign, too",
+			"hash": "#asign"
 		}
 	]
 }
