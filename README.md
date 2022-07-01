@@ -1,16 +1,46 @@
 # dieklingel_base
 
-A new Flutter project.
+This project is the lightweight front-end for dieKlingel.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Build
 
-A few resources to get you started if this is your first Flutter project:
+install build dependecies:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+comming soon . . .
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+to build this project run the following:
+
+```
+flutter build web
+```
+
+### Run
+
+install run dependencies:
+
+```
+apt-get install pip3 python3
+pip3 install eel
+```
+
+change the directory to the build dir:
+
+```
+cd ./build/web
+```
+
+add executable rights to the runner:
+
+```
+chmod +x ./runner.py
+```
+
+run the project:
+
+```
+./runner.py
+```
