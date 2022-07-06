@@ -1,5 +1,5 @@
 {
-	"uid":"main-door:9873",
+	"uid":"com.dieklingel/main-door:9873/",
 	"webrtc": {
 		"ice": {
 			"iceServers": [
@@ -32,7 +32,7 @@
 	"signs": [
 		{
 			"text": "<span style='font-weight: bold;'>Hello World!</span>",
-			"hash": "#mysign"
+			"hash": "#default"
 		},
 		{
 			"text": "I am a Sign!",

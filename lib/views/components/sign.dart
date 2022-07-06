@@ -27,7 +27,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     vsync: this,
     duration: const Duration(milliseconds: 1000),
   );
-  final AudioCache player = AudioCache();
+  final AudioCache player = AudioCache(prefix: "resources/");
 
   @override
   void initState() {
@@ -66,7 +66,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                         .chain(CurveTween(curve: Curves.elasticIn))
                         .animate(_animationController),
                     child: Image.asset(
-                      "assets/images/clapper.png",
+                      "resources/images/clapper.png",
                       fit: BoxFit.fitHeight,
                       height: widget.height / 4,
                     ),
@@ -79,7 +79,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                         .chain(CurveTween(curve: Curves.elasticIn))
                         .animate(_animationController),
                     child: Image.asset(
-                      "assets/images/bell.png",
+                      "resources/images/bell.png",
                       fit: BoxFit.fitHeight,
                       height: widget.height / 4,
                     ),

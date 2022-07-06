@@ -40,7 +40,7 @@ class _Home extends State<Home> {
 
   void init() async {
     // init configuration
-    String configPath = "assets/config/config.json";
+    String configPath = "resources/config/config.json";
     String rawConfig = await rootBundle.loadString(configPath);
     config = jsonDecode(rawConfig);
     setState(() {
@@ -54,15 +54,15 @@ class _Home extends State<Home> {
     await _messagingClient.connect();
     uid = config["uid"] ?? "none";
     _messagingClient.send(
-      "com.dieklingel/$uid/system/log",
+      "${uid}system/log",
       "system initialized with uid: $uid",
     );
     _messagingClient.send(
-      "com.dieklingel/$uid/io/display/state",
+      "${uid}io/display/state",
       "on",
     );
     _messagingClient.addEventListener(
-      "message:com.dieklingel/$uid/firebase/notification/token/add",
+      "message:${uid}firebase/notification/token/add",
       (raw) async {
         Map<String, dynamic> message = jsonDecode(raw);
         if (null == message["hash"] || null == message["token"]) return;
@@ -74,7 +74,7 @@ class _Home extends State<Home> {
         if (!tokens.contains(token)) tokens.add(token);
         prefs.setStringList("sign/$hash", tokens);
         _messagingClient.send(
-          "com.dieklingel/$uid/system/log",
+          "${uid}system/log",
           "token for hash '$hash' set",
         );
       },
@@ -82,7 +82,7 @@ class _Home extends State<Home> {
     // init signaling client
     _signalingClient = SignalingClient.fromMessagingClient(
       _messagingClient,
-      "com.dieklingel/$uid/rtc/signaling",
+      "${uid}rtc/signaling",
       uid,
     );
     // init rtc client
@@ -94,7 +94,7 @@ class _Home extends State<Home> {
     _rtcClient.addEventListener("offer-received", (offer) async {
       await _mediaResource.open(true, true);
       _messagingClient.send(
-        "com.dieklingel/$uid/system/log",
+        "${uid}system/log",
         "request to start rtc acknowledged",
       );
       _rtcClient.answer(offer);
@@ -104,7 +104,7 @@ class _Home extends State<Home> {
     });
     _rtcClient.addEventListener("state-changed", (state) {
       _messagingClient.send(
-        "com.dieklingel/$uid/rtc/call/state",
+        "${uid}rtc/call/state",
         state.toString(),
       );
     });
@@ -143,7 +143,7 @@ class _Home extends State<Home> {
           signHeigh,
           onTap: (String hash) async {
             _messagingClient.send(
-              "com.dieklingel/$uid/system/log",
+              "${uid}system/log",
               "the sign was clicked",
             );
             SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -162,11 +162,11 @@ class _Home extends State<Home> {
               "image": snapshot,
             };
             _messagingClient.send(
-              "com.dieklingel/$uid/firebase/notification/send",
+              "${uid}firebase/notification/send",
               jsonEncode(message),
             );
             _messagingClient.send(
-              "com.dieklingel/$uid/system/log",
+              "${uid}system/log",
               "notification send",
             );
           },

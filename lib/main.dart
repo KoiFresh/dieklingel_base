@@ -25,7 +25,7 @@ class _MyApp extends State<MyApp> {
   }
 
   void init() async {
-    String configPath = "assets/config/config.json";
+    String configPath = "resources/config/config.json";
     String rawConfig = await rootBundle.loadString(configPath);
     dynamic config = jsonDecode(rawConfig);
 
