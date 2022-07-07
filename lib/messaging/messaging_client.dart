@@ -42,7 +42,8 @@ class MessagingClient extends EventEmitter {
     }
     MqttBrowserClient client = MqttBrowserClient("ws://$hostname", "");
     client.port = port;
-    client.keepAlivePeriod = 20;
+    client.keepAlivePeriod = 5;
+    client.autoReconnect = true;
     client.setProtocolV311();
     client.websocketProtocols = MqttClientConstants.protocolsSingleDefault;
     client.onConnected = () {};
