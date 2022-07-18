@@ -9,7 +9,7 @@ Check out our website to get more informatoon
 
 install build dependecies:
 to build this project you will need to install the flutter sdk, herefore chekout the website.
-(https://docs.flutter.dev/get-started/install/linux)[https://docs.flutter.dev/get-started/install/linux]
+https://docs.flutter.dev/get-started/install/linux
 
 to build this project run the following:
 
