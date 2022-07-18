@@ -15,6 +15,7 @@
     the `--base-href` argument provided to `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
+  <script type="text/javascript" src="/eel.js"></script>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -44,9 +45,9 @@
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        }
+        //serviceWorker: {
+        //  serviceWorkerVersion: serviceWorkerVersion,
+        //}
       }).then(function(engineInitializer) {
         return engineInitializer.initializeEngine();
       }).then(function(appRunner) {
