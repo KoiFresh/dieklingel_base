@@ -1,5 +1,7 @@
 # dieklingel_base
 
+![alt dieKlingel Logo und Text](https://dieklingel.de/_nuxt/image/5577c6.webp)
+
 This project is the lightweight front-end for dieKlingel, writte with flutter.
 Check out our website to get more informatoon
 
