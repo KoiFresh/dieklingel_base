@@ -1,16 +1,15 @@
 # dieklingel_base
 
-This project is the lightweight front-end for dieKlingel.
+This project is the lightweight front-end for dieKlingel, writte with flutter.
+Check out our website to get more informatoon
 
 ## Getting Started
 
 ### Build
 
 install build dependecies:
-
-```
-comming soon . . .
-```
+to build this project you will need to install the flutter sdk, herefore chekout the website.
+(https://docs.flutter.dev/get-started/install/linux)[https://docs.flutter.dev/get-started/install/linux]
 
 to build this project run the following:
 
@@ -24,7 +23,7 @@ install run dependencies:
 
 ```
 apt-get install pip3 python3
-pip3 install eel
+pip3 install eel setproctitle
 ```
 
 change the directory to the build dir:
