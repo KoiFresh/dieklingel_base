@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -12,6 +14,7 @@ class RtcClient extends EventEmitter {
   final MediaRessource _mediaRessource;
   final Map<String, dynamic> _iceServers;
   String recipient = "";
+  List<RTCIceCandidate> candidates = List.empty(growable: true);
   RTCPeerConnection? _rtcPeerConnection;
 
   RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
@@ -32,13 +35,15 @@ class RtcClient extends EventEmitter {
           );
           break;
         case SignalingMessageType.candidate:
-          _rtcPeerConnection?.addCandidate(
-            RTCIceCandidate(
-              message.data['candidate'],
-              message.data['sdpMid'],
-              message.data['sdpMLineIndex'],
-            ),
+          RTCIceCandidate candidate = RTCIceCandidate(
+            message.data['candidate'],
+            message.data['sdpMid'],
+            message.data['sdpMLineIndex'],
           );
+          if (_rtcPeerConnection == null) {
+            candidates.add(candidate);
+          }
+          _rtcPeerConnection?.addCandidate(candidate);
           break;
         case SignalingMessageType.busy:
         case SignalingMessageType.leave:
@@ -90,6 +95,10 @@ class RtcClient extends EventEmitter {
   }
 
   void _onTrackReceived(RTCTrackEvent event) {
+    if (event.streams.isEmpty) {
+      print("skipt track");
+      return;
+    }
     emit("mediatrack-received", event.streams[0]);
   }
 
@@ -120,6 +129,12 @@ class RtcClient extends EventEmitter {
     ));
     RTCSessionDescription answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
+
+    for (RTCIceCandidate candidate in candidates) {
+      connection.addCandidate(candidate);
+    }
+    candidates.clear();
+
     SignalingMessage message = SignalingMessage();
     message.sender = _signalingClient.uid;
     message.recipient = offer.sender;
