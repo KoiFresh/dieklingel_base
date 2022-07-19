@@ -1,5 +1,5 @@
 {
-	"uid":"com.dieklingel/main-door:9873/",
+	"uid":"com.dieklingel/mayer/kai/",
 	"webrtc": {
 		"ice": {
 			"iceServers": [
@@ -7,9 +7,27 @@
 					"url": "stun:stun1.l.google.com:19302"
 				},
 				{
-				  "url": "turn:dieklingel.com:3478",
-				  "credential": "12345",
-				  "username": "guest"
+					"urls": "turn:dieklingel.com:3478",
+					"username": "guest",
+					"credential": "12345"
+				},
+				{
+					"urls": "stun:openrelay.metered.ca:80"
+				},
+				{
+					"urls": "turn:openrelay.metered.ca:80",
+					"username": "openrelayproject",
+					"credential": "openrelayproject"
+				},
+				{
+					"urls": "turn:openrelay.metered.ca:443",
+					"username": "openrelayproject",
+					"credential": "openrelayproject"
+				},
+				{
+					"urls": "turn:openrelay.metered.ca:443?transport=tcp",
+					"username": "openrelayproject",
+					"credential": "openrelayproject"
 				}
 			]
 		}
