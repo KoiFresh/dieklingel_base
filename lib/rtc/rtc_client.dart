@@ -1,8 +1,6 @@
-import 'dart:html';
-
-import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'rtc_connection_state.dart';
 import '../event/event_emitter.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
@@ -60,9 +58,7 @@ class RtcClient extends EventEmitter {
     RTCPeerConnection connection = await createPeerConnection(_iceServers);
     MediaStream? stream = _mediaRessource.stream;
     if (null != stream) {
-      stream.getTracks().forEach((track) {
-        connection.addTrack(track, stream);
-      });
+      connection.addStream(stream);
     }
     connection.onIceCandidate = _onNewIceCandidateFound;
     connection.onConnectionState = _onConnectionStateChanged;
@@ -81,12 +77,12 @@ class RtcClient extends EventEmitter {
   }
 
   void _onConnectionStateChanged(RTCPeerConnectionState state) {
-    // emit("state-changed", state.toString());
     switch (state) {
       case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
         emit("state-changed", RtcConnectionState.connected);
         break;
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+        emit("state-changed", RtcConnectionState.disconnected);
         hangup();
         break;
       default:
