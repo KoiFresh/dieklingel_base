@@ -18,6 +18,7 @@ jobs:
         run: |
           VERSION=$(cat pubspec.yaml | grep -Po '(?<=version:\s)(.*)')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - run: ./.github/workflows/build_debian_pkg.sh
       - uses: actions/upload-artifact@v3
         with:
           name: dieklingel_${{ env.VERSION }}.deb
