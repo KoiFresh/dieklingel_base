@@ -1,8 +1,10 @@
 name: build-debian-pkg
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["create-tag"]
+    types:
+      - completed
+
 jobs:
   build-debian-pkg:
     runs-on: ubuntu-latest
@@ -14,12 +16,29 @@ jobs:
           channel: "master"
       - run: flutter pub get
       - run: flutter build web
-      - name: check current version
+      - name: get current version
         run: |
           VERSION=$(cat pubspec.yaml | grep -Po '(?<=version:\s)(.*)')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - run: ./.github/workflows/build_debian_pkg.sh
-      - uses: actions/upload-artifact@v3
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          name: dieklingel_${{ env.VERSION }}.deb
-          path: dieklingel_${{ env.VERSION }}.deb
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: release
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./dieklingel_${{ env.VERSION }}.deb
+          asset_name: ./dieklingel_${{ env.VERSION }}.deb
+          asset_content_type: application/zip
