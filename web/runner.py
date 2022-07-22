@@ -4,7 +4,7 @@ import setproctitle
 import eel
 
 PORT = 8000
-DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+DIRECTORY = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 def main():
     os.environ["DISPLAY"] = ":0"

@@ -1,0 +1,24 @@
+name: build-debian-pkg
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-debian-pkg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.1.0"
+          channel: "master"
+      - run: flutter pub get
+      - run: flutter build web
+      - name: check current version
+        run: |
+          VERSION=$(cat pubspec.yaml | grep -Po '(?<=version:\s)(.*)')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dieklingel_${{ env.VERSION }}.deb
+          path: dieklingel_${{ env.VERSION }}.deb

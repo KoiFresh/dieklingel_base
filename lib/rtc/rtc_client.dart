@@ -1,6 +1,6 @@
-import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'rtc_connection_state.dart';
 import '../event/event_emitter.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
@@ -12,6 +12,7 @@ class RtcClient extends EventEmitter {
   final MediaRessource _mediaRessource;
   final Map<String, dynamic> _iceServers;
   String recipient = "";
+  List<RTCIceCandidate> candidates = List.empty(growable: true);
   RTCPeerConnection? _rtcPeerConnection;
 
   RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
@@ -32,13 +33,15 @@ class RtcClient extends EventEmitter {
           );
           break;
         case SignalingMessageType.candidate:
-          _rtcPeerConnection?.addCandidate(
-            RTCIceCandidate(
-              message.data['candidate'],
-              message.data['sdpMid'],
-              message.data['sdpMLineIndex'],
-            ),
+          RTCIceCandidate candidate = RTCIceCandidate(
+            message.data['candidate'],
+            message.data['sdpMid'],
+            message.data['sdpMLineIndex'],
           );
+          if (_rtcPeerConnection == null) {
+            candidates.add(candidate);
+          }
+          _rtcPeerConnection?.addCandidate(candidate);
           break;
         case SignalingMessageType.busy:
         case SignalingMessageType.leave:
@@ -55,9 +58,7 @@ class RtcClient extends EventEmitter {
     RTCPeerConnection connection = await createPeerConnection(_iceServers);
     MediaStream? stream = _mediaRessource.stream;
     if (null != stream) {
-      stream.getTracks().forEach((track) {
-        connection.addTrack(track, stream);
-      });
+      connection.addStream(stream);
     }
     connection.onIceCandidate = _onNewIceCandidateFound;
     connection.onConnectionState = _onConnectionStateChanged;
@@ -76,12 +77,12 @@ class RtcClient extends EventEmitter {
   }
 
   void _onConnectionStateChanged(RTCPeerConnectionState state) {
-    // emit("state-changed", state.toString());
     switch (state) {
       case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
         emit("state-changed", RtcConnectionState.connected);
         break;
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+        emit("state-changed", RtcConnectionState.disconnected);
         hangup();
         break;
       default:
@@ -90,6 +91,10 @@ class RtcClient extends EventEmitter {
   }
 
   void _onTrackReceived(RTCTrackEvent event) {
+    if (event.streams.isEmpty) {
+      print("skipt track");
+      return;
+    }
     emit("mediatrack-received", event.streams[0]);
   }
 
@@ -120,6 +125,12 @@ class RtcClient extends EventEmitter {
     ));
     RTCSessionDescription answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
+
+    for (RTCIceCandidate candidate in candidates) {
+      connection.addCandidate(candidate);
+    }
+    candidates.clear();
+
     SignalingMessage message = SignalingMessage();
     message.sender = _signalingClient.uid;
     message.recipient = offer.sender;
