@@ -18,4 +18,3 @@ ln -sfr debian/etc/dieklingel/config.json debian/usr/share/dieklingel/assets/res
 # actual build prozess 
 dpkg-deb --build debian
 mv debian.deb dieklingel_$VERSION.deb
-

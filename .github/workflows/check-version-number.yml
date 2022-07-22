@@ -1,0 +1,26 @@
+name: check-version-number
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  check-version-number:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: check current version
+        run: |
+          VERSION_TAG=v$(cat pubspec.yaml | grep -Po '(?<=version:\s)(.*)')
+          echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
+      - uses: mukunku/tag-exists-action@v1.0.0
+        id: tag
+        with:
+          tag: ${{ env.VERSION_TAG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: compare tags
+        run: |
+          if [ "${{ steps.tag.outputs.exists }}" == "true" ]; then
+            echo "tag already exists"
+            exit 1
+          fi
