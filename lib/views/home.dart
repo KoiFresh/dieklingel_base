@@ -2,16 +2,18 @@ import 'dart:convert';
 
 import 'package:camera/camera.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
+import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../signaling/signaling_message.dart';
+import '../signaling/signaling_message_type.dart';
 import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
-import '../messaging/messaging_client.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -23,11 +25,10 @@ class Home extends StatefulWidget {
 class _Home extends State<Home> {
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
-  late final RtcClient _rtcClient;
   late final String uid;
   late final dynamic config;
-  final MediaRessource _mediaResource = MediaRessource();
-  final List<dynamic> _signs = List.empty(growable: true);
+  final List<dynamic> _signs = [];
+  final List<RtcClient> _rtcClients = [];
 
   final RTCVideoRenderer _renderer = RTCVideoRenderer();
 
@@ -85,29 +86,53 @@ class _Home extends State<Home> {
       "${uid}rtc/signaling",
       uid,
     );
-    // init rtc client
-    _rtcClient = RtcClient(
-      _signalingClient,
-      _mediaResource,
-      config["webrtc"]["ice"],
+
+    _signalingClient.addEventListener("message", (message) {
+      if (message is! SignalingMessage) return;
+      switch (message.type) {
+        case SignalingMessageType.candidate:
+          break;
+        case SignalingMessageType.offer:
+          SignalingMessage m = SignalingMessage.fromJson(message.toJson());
+          createRtcClient(m);
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  void createRtcClient(SignalingMessage offerMessage) async {
+    Map<String, dynamic> iceServers = config["webrtc"]["ice"];
+    MediaRessource mediaRessource = MediaRessource();
+    RtcClient client = RtcClient(_signalingClient, mediaRessource, iceServers);
+    client.recipient = offerMessage.sender;
+
+    _messagingClient.send(
+      "${uid}system/log",
+      "request to start rtc acknowledged for ${client.recipient}",
     );
-    _rtcClient.addEventListener("offer-received", (offer) async {
-      await _mediaResource.open(true, true);
-      _messagingClient.send(
-        "${uid}system/log",
-        "request to start rtc acknowledged",
-      );
-      _rtcClient.answer(offer);
-    });
-    _rtcClient.addEventListener("mediatrack-received", (track) {
+
+    /*client.addEventListener("mediatrack-received", (track) {
       _renderer.srcObject = track;
-    });
-    _rtcClient.addEventListener("state-changed", (state) {
+    }); */
+    client.addEventListener("state-changed", (state) {
+      if (state is! RtcConnectionState) return;
+      switch (state) {
+        case RtcConnectionState.disconnected:
+          _rtcClients.remove(client);
+          break;
+        default:
+          break;
+      }
       _messagingClient.send(
         "${uid}rtc/call/state",
         state.toString(),
       );
     });
+    await mediaRessource.open(true, true);
+    client.answer(offerMessage);
+    _rtcClients.add(client);
   }
 
   Future<String> takePicture() async {

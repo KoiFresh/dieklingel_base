@@ -18,6 +18,7 @@ class RtcClient extends EventEmitter {
   RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
     _signalingClient.addEventListener("message", (message) {
       if (message is! SignalingMessage) return;
+      if (message.sender != recipient) return;
       switch (message.type) {
         case SignalingMessageType.offer:
           emit("state-changed", RtcConnectionState.invited);
