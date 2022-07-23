@@ -3,6 +3,8 @@
 mkdir -p debian/usr/share
 cp -r build/web debian/usr/share/dieklingel
 
+chmod +x debian/usr/share/dieklingel/runner.py
+
 mkdir -p debian/usr/local/bin
 ln -sfr debian/usr/share/dieklingel/runner.py  debian/usr/local/bin/dieklingel
 
