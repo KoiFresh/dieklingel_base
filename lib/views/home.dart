@@ -5,6 +5,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
+import 'package:dieklingel_base/views/screensaver.dart';
 import 'package:dieklingel_base/views/signs.dart';
 import './numpad.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,9 @@ class _Home extends State<Home> {
   late final SignalingClient _signalingClient;
   final List<RtcClient> _rtcClients = [];
   String uid = "notReadyUid";
-  dynamic config;
+  dynamic _config;
+
+  bool _displayIsOn = false;
 
   @override
   void initState() {
@@ -44,15 +47,16 @@ class _Home extends State<Home> {
     // init configuration
     String rawConfig = await rootBundle.loadString(configPath);
     setState(() {
-      config = jsonDecode(rawConfig);
+      _config = jsonDecode(rawConfig);
     });
 
     _messagingClient = MessagingClient(
-      config["mqtt"]["address"] as String,
-      config["mqtt"]["port"] as int,
+      _config["mqtt"]["address"] as String,
+      _config["mqtt"]["port"] as int,
     );
     await _messagingClient.connect();
-    uid = config["uid"] ?? "none";
+    uid = _config["uid"] ?? "none";
+    _registerListerners();
     _messagingClient.send(
       "${uid}system/log",
       "system initialized with uid: $uid",
@@ -101,13 +105,57 @@ class _Home extends State<Home> {
     });
   }
 
+  void _registerListerners() {
+    _messagingClient.addEventListener(
+      "message:${uid}io/display/state",
+      (data) {
+        setState(() {
+          _displayIsOn = (data as String) == "on";
+        });
+      },
+    );
+  }
+
   void _onUnlock(String passcode) {
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
     _messagingClient.send("${uid}io/action/unlock", passcodeHash);
   }
 
+  void _onSignTap(String hash) async {
+    _messagingClient.send(
+      "${uid}system/log",
+      "the sign was clicked",
+    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? tokens = prefs.getStringList("sign/$hash");
+    if (null == tokens) {
+      print("no tokens");
+      return;
+    }
+    String snapshot =
+        _config["notification"]["snapshot"] == true ? await takePicture() : "";
+    Map<String, dynamic> message = {
+      "tokens": tokens,
+      "title": "Jemand steht vor deiner Tuer ($uid)",
+      "body": "https://dieklingel.com/",
+      "image": snapshot,
+    };
+    _messagingClient.send(
+      "${uid}firebase/notification/send",
+      jsonEncode(message),
+    );
+    _messagingClient.send(
+      "${uid}system/log",
+      "notification send",
+    );
+  }
+
+  void _onScreensaverTap() {
+    _messagingClient.send("${uid}io/display/state", "on");
+  }
+
   void createRtcClient(SignalingMessage offerMessage) async {
-    Map<String, dynamic> iceServers = config["webrtc"]["ice"];
+    Map<String, dynamic> iceServers = _config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
     RtcClient client = RtcClient(_signalingClient, mediaRessource, iceServers);
     client.recipient = offerMessage.sender;
@@ -204,30 +252,43 @@ class _Home extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    if (null == config) {
+    if (null == _config) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
-    final double clipLeft = config["viewport"]["clip"]["left"] ?? 0;
-    final double clipTop = config["viewport"]["clip"]["top"] ?? 0;
-    final double clipRight = config["viewport"]["clip"]["right"] ?? 0;
-    final double clipBottom = config["viewport"]["clip"]["bottom"] ?? 0;
+    final double clipLeft = _config["viewport"]["clip"]["left"] ?? 0;
+    final double clipTop = _config["viewport"]["clip"]["top"] ?? 0;
+    final double clipRight = _config["viewport"]["clip"]["right"] ?? 0;
+    final double clipBottom = _config["viewport"]["clip"]["bottom"] ?? 0;
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     final double width = screenWidth - clipLeft - clipRight;
     final double height = screenHeight - clipTop - clipBottom;
 
-    List<Sign> signs = (config["signs"] as List<dynamic>).map(
+    List<Sign> signs = (_config["signs"] as List<dynamic>).map(
       (element) {
         return Sign(
           element["text"],
           element["hash"],
           height,
+          onTap: _onSignTap,
         );
       },
     ).toList();
 
-    return _awake(context, width: width, height: height, signs: signs);
+    return _displayIsOn
+        ? _awake(
+            context,
+            width: width,
+            height: height,
+            signs: signs,
+          )
+        : Screensaver(
+            text: _config["viewport"]?["screensaver"]?["text"] ?? "",
+            width: width,
+            height: height,
+            onTap: _onScreensaverTap,
+          );
   }
 }
