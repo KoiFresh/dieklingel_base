@@ -118,7 +118,7 @@ class _Home extends State<Home> {
 
   void _onUnlock(String passcode) {
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
-    _messagingClient.send("${uid}io/action/unlock", passcodeHash);
+    _messagingClient.send("${uid}io/action/unlock/passcode", passcodeHash);
   }
 
   void _onSignTap(String hash) async {

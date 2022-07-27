@@ -28,7 +28,15 @@ class Numpad extends StatefulWidget {
 }
 
 class _Numpad extends State<Numpad> {
-  final List<int> _passcode = List.generate(6, (index) => Random().nextInt(10));
+  List<int> _passcode = List.filled(6, 0);
+
+  @override
+  void initState() {
+    Future(() {
+      _randomize();
+    });
+    super.initState();
+  }
 
   String get passcode {
     return _passcode.join();
@@ -36,10 +44,12 @@ class _Numpad extends State<Numpad> {
 
   void _randomize() {
     Random random = Random();
+    List<int> randomized = List.generate(
+      _passcode.length,
+      ((index) => random.nextInt(10)),
+    );
     setState(() {
-      for (int i = 0; i < _passcode.length; i++) {
-        _passcode[i] = random.nextInt(10);
-      }
+      _passcode = randomized;
     });
   }
 
