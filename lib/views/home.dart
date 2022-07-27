@@ -1,10 +1,13 @@
 import 'dart:convert';
 
 import 'package:camera/camera.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:dieklingel_base/views/signs.dart';
+import './numpad.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,32 +25,28 @@ class Home extends StatefulWidget {
   State<Home> createState() => _Home();
 }
 
+const String configPath = "resources/config/config.json";
+
 class _Home extends State<Home> {
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
-  late final String uid;
-  late final dynamic config;
-  final List<dynamic> _signs = [];
   final List<RtcClient> _rtcClients = [];
-
-  final RTCVideoRenderer _renderer = RTCVideoRenderer();
+  String uid = "notReadyUid";
+  dynamic config;
 
   @override
   void initState() {
-    _renderer.initialize();
     init();
     super.initState();
   }
 
   void init() async {
     // init configuration
-    String configPath = "resources/config/config.json";
     String rawConfig = await rootBundle.loadString(configPath);
-    config = jsonDecode(rawConfig);
     setState(() {
-      _signs.addAll(config["signs"]);
+      config = jsonDecode(rawConfig);
     });
-    // init messaging client
+
     _messagingClient = MessagingClient(
       config["mqtt"]["address"] as String,
       config["mqtt"]["port"] as int,
@@ -102,6 +101,11 @@ class _Home extends State<Home> {
     });
   }
 
+  void _onUnlock(String passcode) {
+    String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
+    _messagingClient.send("${uid}io/action/unlock", passcodeHash);
+  }
+
   void createRtcClient(SignalingMessage offerMessage) async {
     Map<String, dynamic> iceServers = config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
@@ -153,50 +157,77 @@ class _Home extends State<Home> {
     return "data:image/png;base64,$base64";
   }
 
+  Widget _awake(
+    BuildContext context, {
+    required double width,
+    required double height,
+    required List<Sign> signs,
+  }) {
+    return CarouselSlider(
+      items: [
+        Signs(
+          signs: signs,
+        ),
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment(0.8, 1),
+              colors: <Color>[
+                Color(0xff1f005c),
+                Color(0xff5b0060),
+                Color(0xff870160),
+                Color(0xffac255e),
+                Color(0xffca485c),
+                Color(0xffe16b5c),
+                Color(0xfff39060),
+                Color(0xffffb56b),
+              ], // Gradient from https://learnui.design/tools/gradient-generator.html
+              tileMode: TileMode.mirror,
+            ),
+          ),
+          child: Numpad(
+            width: width,
+            height: height,
+            textStyle: const TextStyle(color: Colors.white),
+            onUnlock: _onUnlock,
+          ),
+        ),
+      ],
+      options: CarouselOptions(
+        height: height,
+        viewportFraction: 1,
+        enableInfiniteScroll: false,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: _signs.length,
-      itemBuilder: (context, index) {
-        final double screenHeight = MediaQuery.of(context).size.height;
-        final double clipTop = config["viewport"]["clip"]["top"];
-        final double clipBottom = config["viewport"]["clip"]["bottom"];
-        final double signHeigh = screenHeight - clipTop - clipBottom;
+    if (null == config) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    final double clipLeft = config["viewport"]["clip"]["left"] ?? 0;
+    final double clipTop = config["viewport"]["clip"]["top"] ?? 0;
+    final double clipRight = config["viewport"]["clip"]["right"] ?? 0;
+    final double clipBottom = config["viewport"]["clip"]["bottom"] ?? 0;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double width = screenWidth - clipLeft - clipRight;
+    final double height = screenHeight - clipTop - clipBottom;
+
+    List<Sign> signs = (config["signs"] as List<dynamic>).map(
+      (element) {
         return Sign(
-          _signs[index]["text"],
-          _signs[index]["hash"],
-          signHeigh,
-          onTap: (String hash) async {
-            _messagingClient.send(
-              "${uid}system/log",
-              "the sign was clicked",
-            );
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            List<String>? tokens = prefs.getStringList("sign/$hash");
-            if (null == tokens) {
-              print("no tokens");
-              return;
-            }
-            String snapshot = config["notification"]["snapshot"] == true
-                ? await takePicture()
-                : "";
-            Map<String, dynamic> message = {
-              "tokens": tokens,
-              "title": "Jemand steht vor deiner Tuer ($uid)",
-              "body": "https://dieklingel.com/",
-              "image": snapshot,
-            };
-            _messagingClient.send(
-              "${uid}firebase/notification/send",
-              jsonEncode(message),
-            );
-            _messagingClient.send(
-              "${uid}system/log",
-              "notification send",
-            );
-          },
+          element["text"],
+          element["hash"],
+          height,
         );
       },
-    );
+    ).toList();
+
+    return _awake(context, width: width, height: height, signs: signs);
   }
 }

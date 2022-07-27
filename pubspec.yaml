@@ -41,6 +41,9 @@ dependencies:
   camera: ^0.9.8+1
   flutter_html: ^3.0.0-alpha.3
   synchronized: ^3.0.0+2
+  carousel_slider: ^4.1.1
+  numberpicker: ^2.1.1
+  crypto: ^3.0.2
 
 dev_dependencies:
   flutter_test:
