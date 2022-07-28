@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:camera/camera.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
@@ -211,10 +210,11 @@ class _Home extends State<Home> {
     required double height,
     required List<Sign> signs,
   }) {
-    return CarouselSlider(
-      items: [
-        Signs(
-          signs: signs,
+    return PageView(
+      children: [
+        SizedBox(
+          width: width,
+          child: Signs(signs: signs),
         ),
         Container(
           decoration: const BoxDecoration(
@@ -242,11 +242,6 @@ class _Home extends State<Home> {
           ),
         ),
       ],
-      options: CarouselOptions(
-        height: height,
-        viewportFraction: 1,
-        enableInfiniteScroll: false,
-      ),
     );
   }
 
