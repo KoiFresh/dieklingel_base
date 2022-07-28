@@ -118,17 +118,23 @@ Rasperry Pi mit 7 Zoll HDMI Bildschirm.
     wget https://github.com/KoiFresh/dieklingel_base/releases/download/v1.0.0+2/dieklingel_1.0.0+2.deb
     ```
 
-6.  Den geladenen Release installieren.
+6.  Python abhäigikeiten installieren
+
+    ```bash
+    sudo pip3 install setproctitle eel
+    ```
+
+7.  Den geladenen Release installieren.
 
     ```bash
     sudo apt-get install ./dieklingel_1.0.0+2.deb
     ```
 
-7.  Die Basis Konfigurieren.
+8.  Die Basis Konfigurieren.
     Nun kann die Basis so Konfiguriert werden, welche Einstellungen hierbei vorgenommen werden
     können, ist unter [Konfiguration](../config/README.md) zu finden.
 
-8.  Den Autostart der Anwendung einrichgten
+9.  Den Autostart der Anwendung einrichgten
     Eine Datei für den Autostart erstellen, nachdem sich ein Nutzer angemeldet hat.
 
     ```bash
