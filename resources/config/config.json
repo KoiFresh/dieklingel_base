@@ -45,6 +45,9 @@
 			"right": 10,
 			"bottom": 10,
 			"left": 10
+		},
+		"screensaver": {
+			"text": "<span style='color: white; font-size: 240px'>Nr</span></br><span style='color: white'>Straße</span>"
 		}
 	},
 	"signs": [
