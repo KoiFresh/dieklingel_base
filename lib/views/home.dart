@@ -6,6 +6,7 @@ import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:dieklingel_base/views/screensaver.dart';
 import 'package:dieklingel_base/views/signs.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import './numpad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -34,6 +35,8 @@ class _Home extends State<Home> {
   String uid = "notReadyUid";
   dynamic _config;
 
+  final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
+
   bool _displayIsOn = false;
 
   @override
@@ -43,6 +46,7 @@ class _Home extends State<Home> {
   }
 
   void init() async {
+    _rtcVideoRenderer.initialize();
     // init configuration
     String rawConfig = await rootBundle.loadString(configPath);
     setState(() {
@@ -164,9 +168,18 @@ class _Home extends State<Home> {
       "request to start rtc acknowledged for ${client.recipient}",
     );
 
-    /*client.addEventListener("mediatrack-received", (track) {
-      _renderer.srcObject = track;
-    }); */
+    client.addEventListener("mediatrack-received", (tracks) {
+      tracks as MediaStream;
+      if (_rtcVideoRenderer.srcObject != null) {
+        MediaStream stream = _rtcVideoRenderer.srcObject!;
+        for (MediaStreamTrack audiotrack in tracks.getAudioTracks()) {
+          stream.addTrack(audiotrack);
+        }
+        _rtcVideoRenderer.srcObject = stream;
+      } else {
+        _rtcVideoRenderer.srcObject = tracks;
+      }
+    });
     client.addEventListener("state-changed", (state) {
       if (state is! RtcConnectionState) return;
       switch (state) {
