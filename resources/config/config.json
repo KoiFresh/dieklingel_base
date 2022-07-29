@@ -34,7 +34,9 @@
 	},
 	"mqtt": {
 		"address": "127.0.0.1",
-		"port": 9001
+		"port": 9001,
+		"username": "Kai",
+		"password": "Kai"
 	},
 	"notification": {
 		"snapshot": false

@@ -34,7 +34,10 @@ class MessagingClient extends EventEmitter {
     _client!.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
   }
 
-  Future<void> connect() async {
+  Future<void> connect({
+    String? username,
+    String? password,
+  }) async {
     if (null != _client) {
       throw Exception(
         "the client has to be disconnected, before in can be connected",
@@ -49,8 +52,7 @@ class MessagingClient extends EventEmitter {
     client.onConnected = () {};
     client.onDisconnected = () {};
     try {
-      await client.connect();
-      client.subscribe("test/", MqttQos.atLeastOnce);
+      await client.connect(username, password);
       client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
         MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
         String topic = c[0].topic;
