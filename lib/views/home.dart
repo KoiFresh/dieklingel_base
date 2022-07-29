@@ -57,7 +57,10 @@ class _Home extends State<Home> {
       _config["mqtt"]["address"] as String,
       _config["mqtt"]["port"] as int,
     );
-    await _messagingClient.connect();
+    await _messagingClient.connect(
+      username: _config["mqtt"]["username"],
+      password: _config["mqtt"]["password"],
+    );
     uid = _config["uid"] ?? "none";
     _registerListerners();
     _messagingClient.send(
@@ -223,7 +226,11 @@ class _Home extends State<Home> {
     required double height,
     required List<Sign> signs,
   }) {
+    width -= 0.5; //
     return PageView(
+      controller: PageController(
+        viewportFraction: 0.99999, // preload next page
+      ),
       children: [
         SizedBox(
           width: width,
