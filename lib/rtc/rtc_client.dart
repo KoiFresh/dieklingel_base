@@ -18,6 +18,7 @@ class RtcClient extends EventEmitter {
   RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
     _signalingClient.addEventListener("message", (message) {
       if (message is! SignalingMessage) return;
+      if (message.sender != recipient) return;
       switch (message.type) {
         case SignalingMessageType.offer:
           emit("state-changed", RtcConnectionState.invited);
@@ -58,10 +59,13 @@ class RtcClient extends EventEmitter {
     RTCPeerConnection connection = await createPeerConnection(_iceServers);
     MediaStream? stream = _mediaRessource.stream;
     if (null != stream) {
-      connection.addStream(stream);
+      stream.getTracks().forEach((track) {
+        connection.addTrack(track, stream);
+      });
     }
     connection.onIceCandidate = _onNewIceCandidateFound;
     connection.onConnectionState = _onConnectionStateChanged;
+    connection.onRenegotiationNeeded = _onRenegotationNeeded;
     connection.onTrack = _onTrackReceived;
     return connection;
   }
@@ -88,6 +92,10 @@ class RtcClient extends EventEmitter {
       default:
         break;
     }
+  }
+
+  void _onRenegotationNeeded() {
+    _rtcPeerConnection?.restartIce();
   }
 
   void _onTrackReceived(RTCTrackEvent event) {

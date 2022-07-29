@@ -34,7 +34,9 @@
 	},
 	"mqtt": {
 		"address": "127.0.0.1",
-		"port": 9001
+		"port": 9001,
+		"username": "Kai",
+		"password": "Kai"
 	},
 	"notification": {
 		"snapshot": false
@@ -45,6 +47,9 @@
 			"right": 10,
 			"bottom": 10,
 			"left": 10
+		},
+		"screensaver": {
+			"text": "<span style='color: white; font-size: 240px'>Nr</span></br><span style='color: white'>Straße</span>"
 		}
 	},
 	"signs": [
