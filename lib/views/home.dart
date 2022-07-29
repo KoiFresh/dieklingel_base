@@ -223,7 +223,11 @@ class _Home extends State<Home> {
     required double height,
     required List<Sign> signs,
   }) {
+    width -= 0.5; //
     return PageView(
+      controller: PageController(
+        viewportFraction: 0.99999, // preload next page
+      ),
       children: [
         SizedBox(
           width: width,
