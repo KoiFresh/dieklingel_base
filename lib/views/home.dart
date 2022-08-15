@@ -46,7 +46,7 @@ class _Home extends State<Home> {
   }
 
   void init() async {
-    _rtcVideoRenderer.initialize();
+    //_rtcVideoRenderer.initialize();
     // init configuration
     String rawConfig = await rootBundle.loadString(configPath);
     setState(() {
@@ -272,10 +272,11 @@ class _Home extends State<Home> {
         child: CircularProgressIndicator(),
       );
     }
-    final double clipLeft = _config["viewport"]["clip"]["left"] ?? 0;
-    final double clipTop = _config["viewport"]["clip"]["top"] ?? 0;
-    final double clipRight = _config["viewport"]["clip"]["right"] ?? 0;
-    final double clipBottom = _config["viewport"]["clip"]["bottom"] ?? 0;
+    // TODO: fix config
+    final double clipLeft = 0; //  _config["viewport"]["clip"]["left"] ?? 0.0;
+    final double clipTop = 0; // _config["viewport"]["clip"]["top"] ?? 0.0;
+    final double clipRight = 0; // _config["viewport"]["clip"]["right"] ?? 0.0;
+    final double clipBottom = 0; //_config["viewport"]["clip"]["bottom"] ?? 0.0;
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     final double width = screenWidth - clipLeft - clipRight;

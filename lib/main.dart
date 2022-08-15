@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:dieklingel_base/views/home.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +30,20 @@ class _MyApp extends State<MyApp> {
     String rawConfig = await rootBundle.loadString(configPath);
     dynamic config = jsonDecode(rawConfig);
 
-    EdgeInsetsGeometry insets = EdgeInsets.fromLTRB(
-      config["viewport"]["clip"]["left"] ?? 0,
-      config["viewport"]["clip"]["top"] ?? 0,
-      config["viewport"]["clip"]["right"] ?? 0,
-      config["viewport"]["clip"]["bottom"] ?? 0,
+    /*EdgeInsetsGeometry insets = EdgeInsets.fromLTRB(
+      double.parse(config["viewport"]["clip"]["left"]) ?? 0.0,
+      config["viewport"]["clip"]["top"] ?? 0.0,
+      config["viewport"]["clip"]["right"] ?? 0.0,
+      config["viewport"]["clip"]["bottom"] ?? 0.0,
+    ); */
+
+    EdgeInsets insets = EdgeInsets.fromLTRB(
+      0,
+      0,
+      0,
+      0,
     );
+
     setState(() {
       geometry = insets;
     });

@@ -1,4 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
+//import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -27,7 +27,8 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     vsync: this,
     duration: const Duration(milliseconds: 1000),
   );
-  final AudioCache player = AudioCache(prefix: "resources/");
+  // TODO: add audio player
+  //final AudioCache player = AudioCache(prefix: "resources/");
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     return GestureDetector(
       onTap: () async {
         widget.onTap?.call(widget.hash);
-        player.play("audio/doorbell.wav");
+        //player.play("audio/doorbell.wav");
         await _animationController.forward();
         await _animationController.reverse();
       },
