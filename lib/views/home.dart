@@ -46,7 +46,7 @@ class _Home extends State<Home> {
   }
 
   void init() async {
-    //_rtcVideoRenderer.initialize();
+    _rtcVideoRenderer.initialize();
     // init configuration
     String rawConfig = await rootBundle.loadString(configPath);
     setState(() {

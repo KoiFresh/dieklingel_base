@@ -1,11 +1,20 @@
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:dieklingel_base/views/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Force the device, to use landscape mode
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitUp,
+  ]).then(
+    (value) => runApp(
+      const MyApp(),
+    ),
+  );
   runApp(const MyApp());
 }
 

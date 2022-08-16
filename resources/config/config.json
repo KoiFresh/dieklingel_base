@@ -1,7 +1,8 @@
 {
-	"uid":"com.dieklingel/mayer/kai/",
+	"uid": "com.dieklingel/mayer/kai/",
 	"webrtc": {
 		"ice": {
+			"sdpSemantics": "unified-plan",
 			"iceServers": [
 				{
 					"url": "stun:stun1.l.google.com:19302"
@@ -33,16 +34,14 @@
 		}
 	},
 	"mqtt": {
-		"address": "127.0.0.1",
-		"port": 1883,
-		"username": "Kai",
-		"password": "Kai"
+		"address": "server.dieklingel.com",
+		"port": 1883
 	},
 	"notification": {
 		"snapshot": false
 	},
-	"viewport":{
-		"clip":{
+	"viewport": {
+		"clip": {
 			"top": 10,
 			"right": 10,
 			"bottom": 10,
