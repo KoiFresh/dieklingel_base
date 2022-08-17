@@ -4,8 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 
-class Numpad extends StatefulWidget {
-  const Numpad({
+class NumpadView extends StatefulWidget {
+  const NumpadView({
     super.key,
     required this.width,
     required this.height,
@@ -24,10 +24,10 @@ class Numpad extends StatefulWidget {
   final TextStyle? selectedTextStyle;
 
   @override
-  State<Numpad> createState() => _Numpad();
+  State<NumpadView> createState() => _NumpadView();
 }
 
-class _Numpad extends State<Numpad> {
+class _NumpadView extends State<NumpadView> {
   List<int> _passcode = List.filled(6, 0);
 
   @override

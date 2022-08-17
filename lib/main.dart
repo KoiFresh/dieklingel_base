@@ -1,11 +1,14 @@
 import 'dart:convert';
 
-import 'package:dieklingel_base/views/home.dart';
+import 'package:dieklingel_base/views/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+
   // Force the device, to use landscape mode
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
@@ -68,7 +71,7 @@ class _MyApp extends State<MyApp> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: const Scaffold(
-            body: Home(),
+            body: HomeView(),
           ),
         ),
       ),

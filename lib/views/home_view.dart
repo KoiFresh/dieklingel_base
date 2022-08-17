@@ -4,31 +4,31 @@ import 'package:camera/camera.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
-import 'package:dieklingel_base/views/screensaver.dart';
-import 'package:dieklingel_base/views/signs.dart';
+import 'package:dieklingel_base/views/screensaver_view.dart';
+import 'package:dieklingel_base/views/signs_view.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import './numpad.dart';
+import 'numpad_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
-import '../views/components/sign.dart';
+import '../components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
 
-class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+class HomeView extends StatefulWidget {
+  const HomeView({Key? key}) : super(key: key);
 
   @override
-  State<Home> createState() => _Home();
+  State<HomeView> createState() => _HomeView();
 }
 
 const String configPath = "resources/config/config.json";
 
-class _Home extends State<Home> {
+class _HomeView extends State<HomeView> {
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
   final List<RtcClient> _rtcClients = [];
@@ -234,7 +234,7 @@ class _Home extends State<Home> {
       children: [
         SizedBox(
           width: width,
-          child: Signs(signs: signs),
+          child: SignsView(signs: signs),
         ),
         Container(
           decoration: const BoxDecoration(
@@ -254,7 +254,7 @@ class _Home extends State<Home> {
               tileMode: TileMode.mirror,
             ),
           ),
-          child: Numpad(
+          child: NumpadView(
             width: width,
             height: height,
             textStyle: const TextStyle(color: Colors.white),
@@ -300,7 +300,7 @@ class _Home extends State<Home> {
             height: height,
             signs: signs,
           )
-        : Screensaver(
+        : ScreensaverView(
             text: _config["viewport"]?["screensaver"]?["text"] ?? "",
             width: width,
             height: height,
