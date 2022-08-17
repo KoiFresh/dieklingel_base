@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:ffi';
 
+import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:dieklingel_base/views/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,6 +53,7 @@ class _MyApp extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scrollBehavior: TouchScrollBehavior(),
       home: Container(
         color: Colors.black,
         padding: geometry,
