@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:dieklingel_base/touch_scroll_behavior.dart';
-import 'package:dieklingel_base/views/home.dart';
+import 'package:dieklingel_base/views/home_view_page.dart';
+import 'globals.dart' as app;
+import 'package:dieklingel_base/views/loading_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await app.init();
   runApp(const MyApp());
 }
 
@@ -52,15 +56,15 @@ class _MyApp extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      scrollBehavior: TouchScrollBehavior(),
-      home: Container(
-        color: Colors.black,
-        padding: geometry,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: const Scaffold(
-            body: Home(),
+    return Container(
+      color: Colors.black,
+      padding: geometry,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: MaterialApp(
+          scrollBehavior: TouchScrollBehavior(),
+          home: Scaffold(
+            body: LoadingViewPage(),
           ),
         ),
       ),

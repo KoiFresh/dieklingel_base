@@ -19,23 +19,24 @@ import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
 
-class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+class HomeViewPage extends StatefulWidget {
+  const HomeViewPage({Key? key, required this.config}) : super(key: key);
+
+  final Map<String, dynamic> config;
 
   @override
-  State<Home> createState() => _Home();
+  State<HomeViewPage> createState() => _HomeViewPage();
 }
 
 const String configPath = "resources/config/config.json";
 
-class _Home extends State<Home> {
+class _HomeViewPage extends State<HomeViewPage> {
+  final List<RtcClient> _rtcClients = [];
+  final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
-  final List<RtcClient> _rtcClients = [];
   String uid = "notReadyUid";
-  dynamic _config;
-
-  final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
+  late final Map<String, dynamic> config = widget.config;
 
   bool _displayIsOn = false;
 
@@ -46,22 +47,18 @@ class _Home extends State<Home> {
   }
 
   void init() async {
-    //_rtcVideoRenderer.initialize();
+    // TODO: uncomment for production
+    _rtcVideoRenderer.initialize();
     // init configuration
-    String rawConfig = await rootBundle.loadString(configPath);
-    setState(() {
-      _config = jsonDecode(rawConfig);
-    });
-
     _messagingClient = MessagingClient(
-      _config["mqtt"]["address"] as String,
-      _config["mqtt"]["port"] as int,
+      config["mqtt"]["address"] as String,
+      config["mqtt"]["port"] as int,
     );
     await _messagingClient.connect(
-      username: _config["mqtt"]["username"],
-      password: _config["mqtt"]["password"],
+      username: config["mqtt"]["username"],
+      password: config["mqtt"]["password"],
     );
-    uid = _config["uid"] ?? "none";
+    uid = config["uid"] ?? "none";
     _registerListerners();
     _messagingClient.send(
       "${uid}system/log",
@@ -139,7 +136,7 @@ class _Home extends State<Home> {
       return;
     }
     String snapshot =
-        _config["notification"]["snapshot"] == true ? await takePicture() : "";
+        config["notification"]["snapshot"] == true ? await takePicture() : "";
     Map<String, dynamic> message = {
       "tokens": tokens,
       "title": "Jemand steht vor deiner Tuer ($uid)",
@@ -161,7 +158,7 @@ class _Home extends State<Home> {
   }
 
   void createRtcClient(SignalingMessage offerMessage) async {
-    Map<String, dynamic> iceServers = _config["webrtc"]["ice"];
+    Map<String, dynamic> iceServers = config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
     RtcClient client = RtcClient(_signalingClient, mediaRessource, iceServers);
     client.recipient = offerMessage.sender;
@@ -267,11 +264,6 @@ class _Home extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    if (null == _config) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
     // TODO: fix config
     final double clipLeft = 0; //  _config["viewport"]["clip"]["left"] ?? 0.0;
     final double clipTop = 0; // _config["viewport"]["clip"]["top"] ?? 0.0;
@@ -282,7 +274,7 @@ class _Home extends State<Home> {
     final double width = screenWidth - clipLeft - clipRight;
     final double height = screenHeight - clipTop - clipBottom;
 
-    List<Sign> signs = (_config["signs"] as List<dynamic>).map(
+    List<Sign> signs = (config["signs"] as List<dynamic>).map(
       (element) {
         return Sign(
           element["text"],
@@ -301,7 +293,7 @@ class _Home extends State<Home> {
             signs: signs,
           )
         : Screensaver(
-            text: _config["viewport"]?["screensaver"]?["text"] ?? "",
+            text: config["viewport"]?["screensaver"]?["text"] ?? "",
             width: width,
             height: height,
             onTap: _onScreensaverTap,

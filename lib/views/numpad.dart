@@ -1,6 +1,4 @@
 import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 
@@ -84,6 +82,11 @@ class _Numpad extends State<Numpad> {
             Padding(
               padding: EdgeInsets.only(right: widget.width / 10),
               child: MaterialButton(
+                onLongPress: () {
+                  // TODO: remove hardcoded passcode
+                  if (passcode != "000000") return;
+                  // TODO go to info screen
+                },
                 onPressed: (() {
                   widget.onUnlock?.call(passcode);
                   if (widget.randomizePasscodeAfterUnlock) {
