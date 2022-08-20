@@ -4,12 +4,12 @@ import 'package:camera/camera.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
-import 'package:dieklingel_base/views/screensaver.dart';
+import 'package:dieklingel_base/views/menue_view_page.dart';
+import 'package:dieklingel_base/views/screensaver_view.dart';
 import 'package:dieklingel_base/views/signs_view.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'numpad_view.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
@@ -17,6 +17,7 @@ import '../views/components/sign.dart';
 import '../rtc/rtc_client.dart';
 import '../signaling/signaling_client.dart';
 import '../media/media_ressource.dart';
+import '../globals.dart' as app;
 
 class HomeViewPage extends StatefulWidget {
   const HomeViewPage({Key? key, required this.config}) : super(key: key);
@@ -34,7 +35,7 @@ class _HomeViewPage extends State<HomeViewPage> {
   final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
   late final MessagingClient _messagingClient;
   late final SignalingClient _signalingClient;
-  String uid = "notReadyUid";
+  late String uid;
   late final Map<String, dynamic> config = widget.config;
 
   bool _displayState = false;
@@ -57,68 +58,78 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
-    init();
+    _rtcVideoRenderer.initialize();
     uid = config["uid"] ?? "";
+    init();
   }
 
   void init() async {
-    _rtcVideoRenderer.initialize();
-    // init configuration
     _messagingClient = MessagingClient(
       config["mqtt"]["address"] as String,
       config["mqtt"]["port"] as int,
     );
-    await _messagingClient.connect(
-      username: config["mqtt"]["username"],
-      password: config["mqtt"]["password"],
-    );
-    _registerListerners();
-    _messagingClient.send(
-      "${uid}system/log",
-      "system initialized with uid: $uid",
-    );
-    _messagingClient.send(
-      "${uid}io/display/state",
-      "on",
-    );
-    _messagingClient.addEventListener(
-      "message:${uid}firebase/notification/token/add",
-      (raw) async {
-        Map<String, dynamic> message = jsonDecode(raw);
-        if (null == message["hash"] || null == message["token"]) return;
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String hash = message["hash"];
-        String token = message["token"];
-        List<String>? tokens = prefs.getStringList("sign/$hash");
-        tokens ??= List<String>.empty(growable: true);
-        if (!tokens.contains(token)) tokens.add(token);
-        prefs.setStringList("sign/$hash", tokens);
-        _messagingClient.send(
-          "${uid}system/log",
-          "token for hash '$hash' set",
-        );
-      },
-    );
-    // init signaling client
-    _signalingClient = SignalingClient.fromMessagingClient(
-      _messagingClient,
-      "${uid}rtc/signaling",
-      uid,
-    );
+    try {
+      await _messagingClient.connect(
+        username: config["mqtt"]["username"],
+        password: config["mqtt"]["password"],
+      );
+      _registerListerners();
+      _messagingClient.send(
+        "${uid}system/log",
+        "system initialized with uid: $uid",
+      );
+      _messagingClient.send(
+        "${uid}io/display/state",
+        "on",
+      );
+      _messagingClient.addEventListener(
+        "message:${uid}firebase/notification/token/add",
+        (raw) async {
+          Map<String, dynamic> message = jsonDecode(raw);
+          if (null == message["hash"] || null == message["token"]) return;
+          String hash = message["hash"];
+          String token = message["token"];
+          List<String>? tokens = app.preferences.getStringList("sign/$hash");
+          tokens ??= List<String>.empty(growable: true);
+          if (!tokens.contains(token)) tokens.add(token);
+          app.preferences.setStringList("sign/$hash", tokens);
+          _messagingClient.send(
+            "${uid}system/log",
+            "token for hash '$hash' set",
+          );
+        },
+      );
+      // init signaling client
+      _signalingClient = SignalingClient.fromMessagingClient(
+        _messagingClient,
+        "${uid}rtc/signaling",
+        uid,
+      );
 
-    _signalingClient.addEventListener("message", (message) {
-      if (message is! SignalingMessage) return;
-      switch (message.type) {
-        case SignalingMessageType.candidate:
-          break;
-        case SignalingMessageType.offer:
-          SignalingMessage m = SignalingMessage.fromJson(message.toJson());
-          createRtcClient(m);
-          break;
-        default:
-          break;
-      }
-    });
+      _signalingClient.addEventListener("message", (message) {
+        if (message is! SignalingMessage) return;
+        switch (message.type) {
+          case SignalingMessageType.candidate:
+            break;
+          case SignalingMessageType.offer:
+            SignalingMessage m = SignalingMessage.fromJson(message.toJson());
+            createRtcClient(m);
+            break;
+          default:
+            break;
+        }
+      });
+    } catch (exception) {
+      print(exception);
+    }
+  }
+
+  void log(String message) {
+    if (!_messagingClient.isConnected()) return;
+    _messagingClient.send(
+      "${uid}/system/log",
+      message,
+    );
   }
 
   void _registerListerners() {
@@ -133,19 +144,20 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _onUnlock(String passcode) {
+    log("The unlock button was tapped");
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
-    _messagingClient.send("${uid}io/action/unlock/passcode", passcodeHash);
+    if (!_messagingClient.isConnected()) return;
+    _messagingClient.send(
+      "${uid}io/action/unlock/passcode",
+      passcodeHash,
+    );
   }
 
   void _onSignTap(String hash) async {
-    _messagingClient.send(
-      "${uid}system/log",
-      "the sign was clicked",
-    );
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? tokens = prefs.getStringList("sign/$hash");
+    log("The Sign with hash '$hash' was tapped");
+    List<String>? tokens = app.preferences.getStringList("sign/$hash");
     if (null == tokens) {
-      print("no tokens");
+      log("The Sign '$hash' has no tokens");
       return;
     }
     String snapshot =
@@ -156,18 +168,19 @@ class _HomeViewPage extends State<HomeViewPage> {
       "body": "https://dieklingel.com/",
       "image": snapshot,
     };
-    _messagingClient.send(
-      "${uid}firebase/notification/send",
-      jsonEncode(message),
-    );
-    _messagingClient.send(
-      "${uid}system/log",
-      "notification send",
-    );
+    if (_messagingClient.isConnected()) {
+      _messagingClient.send(
+        "${uid}firebase/notification/send",
+        jsonEncode(message),
+      );
+    }
+    log("A Notification for the Sign '$hash' was send");
   }
 
   void _onScreensaverTap() {
-    _messagingClient.send("${uid}io/display/state", "on");
+    setState(() {
+      _displayState = true;
+    });
   }
 
   void createRtcClient(SignalingMessage offerMessage) async {
@@ -176,10 +189,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     RtcClient client = RtcClient(_signalingClient, mediaRessource, iceServers);
     client.recipient = offerMessage.sender;
 
-    _messagingClient.send(
-      "${uid}system/log",
-      "request to start rtc acknowledged for ${client.recipient}",
-    );
+    log("request to start rtc acknowledged for ${client.recipient}, active calls: ${_rtcClients.length}}");
 
     client.addEventListener("mediatrack-received", (tracks) {
       tracks as MediaStream;
@@ -202,10 +212,12 @@ class _HomeViewPage extends State<HomeViewPage> {
         default:
           break;
       }
-      _messagingClient.send(
-        "${uid}rtc/call/state",
-        state.toString(),
-      );
+      if (_messagingClient.isConnected()) {
+        _messagingClient.send(
+          "${uid}rtc/call/state",
+          state.toString(),
+        );
+      }
     });
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
@@ -269,6 +281,14 @@ class _HomeViewPage extends State<HomeViewPage> {
             height: height,
             textStyle: const TextStyle(color: Colors.white),
             onUnlock: _onUnlock,
+            onLongUnlock: (passcode) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: ((context) => const MenueViewPage()),
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -307,7 +327,7 @@ class _HomeViewPage extends State<HomeViewPage> {
                   height: height,
                   signs: signs,
                 )
-              : Screensaver(
+              : ScreensaverView(
                   text: config["viewport"]?["screensaver"]?["text"] ?? "",
                   width: width,
                   height: height,

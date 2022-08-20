@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
-class Screensaver extends StatelessWidget {
-  const Screensaver({
+class ScreensaverView extends StatelessWidget {
+  const ScreensaverView({
     super.key,
     required this.text,
     required this.width,

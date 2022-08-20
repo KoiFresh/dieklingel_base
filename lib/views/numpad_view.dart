@@ -9,6 +9,7 @@ class Numpad extends StatefulWidget {
     required this.height,
     this.onPasscodeChanged,
     this.onUnlock,
+    this.onLongUnlock,
     this.randomizePasscodeAfterUnlock = true,
     this.textStyle,
     this.selectedTextStyle,
@@ -18,6 +19,7 @@ class Numpad extends StatefulWidget {
   final bool randomizePasscodeAfterUnlock;
   final Function(String passcode)? onPasscodeChanged;
   final Function(String passcode)? onUnlock;
+  final Function(String passcode)? onLongUnlock;
   final TextStyle? textStyle;
   final TextStyle? selectedTextStyle;
 
@@ -83,9 +85,7 @@ class _Numpad extends State<Numpad> {
               padding: EdgeInsets.only(right: widget.width / 10),
               child: MaterialButton(
                 onLongPress: () {
-                  // TODO: remove hardcoded passcode
-                  if (passcode != "000000") return;
-                  Navigator.popUntil(context, (route) => route.isFirst);
+                  widget.onLongUnlock?.call(passcode);
                 },
                 onPressed: (() {
                   widget.onUnlock?.call(passcode);
