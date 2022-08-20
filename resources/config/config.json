@@ -1,5 +1,5 @@
 {
-	"uid":"com.dieklingel/mayer/kai/",
+	"uid": "com.dieklingel/mayer/kai/",
 	"webrtc": {
 		"ice": {
 			"iceServers": [
@@ -41,10 +41,10 @@
 	"notification": {
 		"snapshot": false
 	},
-	"viewport":{
-		"clip":{
-			"top": 10,
-			"right": 10,
+	"viewport": {
+		"clip": {
+			"top": 15,
+			"right": 35,
 			"bottom": 10,
 			"left": 10
 		},

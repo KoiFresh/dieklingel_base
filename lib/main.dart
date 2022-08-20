@@ -1,3 +1,4 @@
+import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'globals.dart' as app;
 import 'views/loading_view_page.dart';
@@ -33,6 +34,7 @@ class _MyApp extends State<MyApp> {
         clipBehavior: Clip.antiAliasWithSaveLayer,
         borderRadius: BorderRadius.circular(20),
         child: MaterialApp(
+          scrollBehavior: TouchScrollBehavior(),
           home: Container(
             color: Colors.black,
             padding: geometry,
@@ -42,10 +44,10 @@ class _MyApp extends State<MyApp> {
                 body: LoadingViewPage(
                   onLoad: (config) {
                     EdgeInsets insets = EdgeInsets.fromLTRB(
-                      config["viewport"]["clip"]["left"] ?? 0.0,
-                      config["viewport"]["clip"]["left"] ?? 0.0,
-                      config["viewport"]["clip"]["left"] ?? 0.0,
-                      config["viewport"]["clip"]["left"] ?? 0.0,
+                      config["viewport"]?["clip"]?["left"] ?? 0.0,
+                      config["viewport"]?["clip"]?["top"] ?? 0.0,
+                      config["viewport"]?["clip"]?["right"] ?? 0.0,
+                      config["viewport"]?["clip"]?["bottom"] ?? 0.0,
                     );
                     setState(() {
                       geometry = insets;

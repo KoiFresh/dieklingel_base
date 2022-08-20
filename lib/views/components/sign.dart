@@ -44,9 +44,8 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
       onTap: () async {
         widget.onTap?.call(widget.hash);
         await player.stop();
-        //player.play("audio/doorbell.wav");
+        await player.resume();
         await _animationController.forward();
-        player.resume();
         await _animationController.reverse();
       },
       child: Container(
