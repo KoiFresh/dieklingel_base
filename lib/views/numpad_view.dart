@@ -32,7 +32,7 @@ class _Numpad extends State<Numpad> {
 
   @override
   void initState() {
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future(() {
       _randomize();
     });
     super.initState();

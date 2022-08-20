@@ -30,6 +30,7 @@ class _MyApp extends State<MyApp> {
       color: Colors.black,
       padding: geometry,
       child: ClipRRect(
+        clipBehavior: Clip.antiAliasWithSaveLayer,
         borderRadius: BorderRadius.circular(20),
         child: MaterialApp(
           home: Container(
