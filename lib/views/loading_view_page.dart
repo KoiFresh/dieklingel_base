@@ -8,7 +8,9 @@ import 'package:flutter/services.dart';
 const String configPath = "resources/config/config.json";
 
 class LoadingViewPage extends StatefulWidget {
-  const LoadingViewPage({super.key});
+  const LoadingViewPage({super.key, this.onLoad});
+
+  final Function(Map<String, dynamic> config)? onLoad;
 
   @override
   State<LoadingViewPage> createState() => _LoadingViewPage();
@@ -25,6 +27,7 @@ class _LoadingViewPage extends State<LoadingViewPage> {
     try {
       String raw = await rootBundle.loadString(configPath);
       Map<String, dynamic> config = jsonDecode(raw);
+      widget.onLoad?.call(config);
       if (!mounted) return;
       await Navigator.push(
         context,

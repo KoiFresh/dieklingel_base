@@ -5,11 +5,10 @@ import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:dieklingel_base/views/screensaver.dart';
-import 'package:dieklingel_base/views/signs.dart';
+import 'package:dieklingel_base/views/signs_view.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import './numpad.dart';
+import 'numpad_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../signaling/signaling_message.dart';
@@ -38,16 +37,31 @@ class _HomeViewPage extends State<HomeViewPage> {
   String uid = "notReadyUid";
   late final Map<String, dynamic> config = widget.config;
 
-  bool _displayIsOn = false;
+  bool _displayState = false;
+
+  set displayState(bool value) {
+    if (value == _displayState) return;
+    _displayState = value;
+    if (_messagingClient.isConnected()) {
+      _messagingClient.send(
+        "${uid}io/display/state",
+        _displayState ? "on" : "off",
+      );
+    }
+  }
+
+  bool get displayState {
+    return _displayState;
+  }
 
   @override
   void initState() {
-    init();
     super.initState();
+    init();
+    uid = config["uid"] ?? "";
   }
 
   void init() async {
-    // TODO: uncomment for production
     _rtcVideoRenderer.initialize();
     // init configuration
     _messagingClient = MessagingClient(
@@ -58,7 +72,6 @@ class _HomeViewPage extends State<HomeViewPage> {
       username: config["mqtt"]["username"],
       password: config["mqtt"]["password"],
     );
-    uid = config["uid"] ?? "none";
     _registerListerners();
     _messagingClient.send(
       "${uid}system/log",
@@ -113,7 +126,7 @@ class _HomeViewPage extends State<HomeViewPage> {
       "message:${uid}io/display/state",
       (data) {
         setState(() {
-          _displayIsOn = (data as String) == "on";
+          displayState = (data as String) == "on";
         });
       },
     );
@@ -264,11 +277,10 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: fix config
-    final double clipLeft = 0; //  _config["viewport"]["clip"]["left"] ?? 0.0;
-    final double clipTop = 0; // _config["viewport"]["clip"]["top"] ?? 0.0;
-    final double clipRight = 0; // _config["viewport"]["clip"]["right"] ?? 0.0;
-    final double clipBottom = 0; //_config["viewport"]["clip"]["bottom"] ?? 0.0;
+    final double clipLeft = config["viewport"]["clip"]["left"] ?? 0.0;
+    final double clipTop = config["viewport"]["clip"]["top"] ?? 0.0;
+    final double clipRight = config["viewport"]["clip"]["right"] ?? 0.0;
+    final double clipBottom = config["viewport"]["clip"]["bottom"] ?? 0.0;
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     final double width = screenWidth - clipLeft - clipRight;
@@ -285,18 +297,30 @@ class _HomeViewPage extends State<HomeViewPage> {
       },
     ).toList();
 
-    return _displayIsOn
-        ? _awake(
-            context,
-            width: width,
-            height: height,
-            signs: signs,
-          )
-        : Screensaver(
-            text: config["viewport"]?["screensaver"]?["text"] ?? "",
-            width: width,
-            height: height,
-            onTap: _onScreensaverTap,
-          );
+    return Scaffold(
+      body: Stack(
+        children: [
+          displayState
+              ? _awake(
+                  context,
+                  width: width,
+                  height: height,
+                  signs: signs,
+                )
+              : Screensaver(
+                  text: config["viewport"]?["screensaver"]?["text"] ?? "",
+                  width: width,
+                  height: height,
+                  onTap: _onScreensaverTap,
+                ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _messagingClient.disconnect();
   }
 }

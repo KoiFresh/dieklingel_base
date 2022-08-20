@@ -85,7 +85,7 @@ class _Numpad extends State<Numpad> {
                 onLongPress: () {
                   // TODO: remove hardcoded passcode
                   if (passcode != "000000") return;
-                  // TODO go to info screen
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 onPressed: (() {
                   widget.onUnlock?.call(passcode);

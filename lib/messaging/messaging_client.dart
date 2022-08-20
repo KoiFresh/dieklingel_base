@@ -65,4 +65,8 @@ class MessagingClient extends EventEmitter {
     _client?.disconnect();
     _client = null;
   }
+
+  bool isConnected() {
+    return _client?.connectionStatus?.state == MqttConnectionState.connected;
+  }
 }
