@@ -127,7 +127,7 @@ class _HomeViewPage extends State<HomeViewPage> {
   void log(String message) {
     if (!_messagingClient.isConnected()) return;
     _messagingClient.send(
-      "${uid}/system/log",
+      "${uid}system/log",
       message,
     );
   }
