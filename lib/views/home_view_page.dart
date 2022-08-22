@@ -28,8 +28,6 @@ class HomeViewPage extends StatefulWidget {
   State<HomeViewPage> createState() => _HomeViewPage();
 }
 
-const String configPath = "resources/config/config.json";
-
 class _HomeViewPage extends State<HomeViewPage> {
   final List<RtcClient> _rtcClients = [];
   final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
@@ -39,20 +37,33 @@ class _HomeViewPage extends State<HomeViewPage> {
   late final Map<String, dynamic> config = widget.config;
 
   bool _displayState = false;
+  String _snapshot = "";
 
   set displayState(bool value) {
     if (value == _displayState) return;
     _displayState = value;
-    if (_messagingClient.isConnected()) {
-      _messagingClient.send(
-        "${uid}io/display/state",
-        _displayState ? "on" : "off",
-      );
-    }
+    if (!_messagingClient.isConnected()) return;
+    _messagingClient.send(
+      "${uid}io/display/state",
+      _displayState ? "on" : "off",
+    );
   }
 
   bool get displayState {
     return _displayState;
+  }
+
+  set snapshot(String value) {
+    _snapshot = value;
+    if (!_messagingClient.isConnected()) return;
+    _messagingClient.send(
+      "${uid}io/camera/snapshot",
+      snapshot,
+    );
+  }
+
+  String get snapshot {
+    return _snapshot;
   }
 
   @override
@@ -141,6 +152,12 @@ class _HomeViewPage extends State<HomeViewPage> {
         });
       },
     );
+    _messagingClient.addEventListener(
+      "message:${uid}io/camera/request",
+      (data) async {
+        snapshot = await takePicture();
+      },
+    );
   }
 
   void _onUnlock(String passcode) {
@@ -160,7 +177,7 @@ class _HomeViewPage extends State<HomeViewPage> {
       log("The Sign '$hash' has no tokens");
       return;
     }
-    String snapshot =
+    snapshot =
         config["notification"]["snapshot"] == true ? await takePicture() : "";
     Map<String, dynamic> message = {
       "tokens": tokens,
@@ -282,6 +299,7 @@ class _HomeViewPage extends State<HomeViewPage> {
             textStyle: const TextStyle(color: Colors.white),
             onUnlock: _onUnlock,
             onLongUnlock: (passcode) {
+              if (passcode != "000000") return;
               Navigator.push(
                 context,
                 MaterialPageRoute(
