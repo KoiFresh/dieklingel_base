@@ -35,26 +35,19 @@ class _MyApp extends State<MyApp> {
         borderRadius: BorderRadius.circular(20),
         child: MaterialApp(
           scrollBehavior: TouchScrollBehavior(),
-          home: Container(
-            color: Colors.black,
-            padding: geometry,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Scaffold(
-                body: LoadingViewPage(
-                  onLoad: (config) {
-                    EdgeInsets insets = EdgeInsets.fromLTRB(
-                      config["viewport"]?["clip"]?["left"] ?? 0.0,
-                      config["viewport"]?["clip"]?["top"] ?? 0.0,
-                      config["viewport"]?["clip"]?["right"] ?? 0.0,
-                      config["viewport"]?["clip"]?["bottom"] ?? 0.0,
-                    );
-                    setState(() {
-                      geometry = insets;
-                    });
-                  },
-                ),
-              ),
+          home: Scaffold(
+            body: LoadingViewPage(
+              onLoad: (config) {
+                EdgeInsets insets = EdgeInsets.fromLTRB(
+                  config["viewport"]?["clip"]?["left"] ?? 0.0,
+                  config["viewport"]?["clip"]?["top"] ?? 0.0,
+                  config["viewport"]?["clip"]?["right"] ?? 0.0,
+                  config["viewport"]?["clip"]?["bottom"] ?? 0.0,
+                );
+                setState(() {
+                  geometry = insets;
+                });
+              },
             ),
           ),
         ),
