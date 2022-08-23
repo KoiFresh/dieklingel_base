@@ -2,5 +2,4 @@ Package: dieKlingel
 Version: {{VERSION}}
 Maintainer: Kai Mayer <kai.mayer@dieklingel.com>
 Architecture: all
-Depends: chromium-browser
 Description: dieKlingel debian package
