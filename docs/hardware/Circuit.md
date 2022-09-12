@@ -19,3 +19,6 @@ welche mit der Basis der Klingel verwendet werden kann.
 
 5. Radar Sensor - Bewegungserkennung
     - <https://amzn.eu/d/i4RNoGI>
+
+6. Audio
+    - <https://www.reichelt.de/kleinlautsprecher-k28-40-8-2w-8ohm-vis-k28-40-8-p145413.html>
