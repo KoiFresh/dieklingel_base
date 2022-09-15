@@ -34,6 +34,21 @@ Ablauf, zum Aufsetzen der Desktop umgebunge, in welcher dieKlingel läuft
    Neustart sollte der Raspi nun in Gnome starten. Alle weiteren Einstellungen
    können in der Einstellungen App von Gnome ausgeführt werden.
 
+4. Denn Networkmanager dem Autostart hinzufügen
+  
+## Konfiguration
+
+Nachdem der Display installiert ist, können noch ein paar dinge konfiguriert werden:
+
+- AutoLogin
+- Display drehen
+- Vnc aktiviern
+- Inaktivitätsmeldung deaktivieren
+
+    ```bash
+    gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+    ```
+
 ## Known Issues
 
 - Display Drehen
@@ -49,3 +64,19 @@ ENV{LIBINPUT_CALIBRATION_MATRIX}="0 -1 1 1 0 0 0"
 
 Nach einem Neustart, sollte die Toucheingabe um 90° im Uhrezigersinn gedreht
 sein. Je nach Bildschrimausrichtung, kann die Rotationsmatrix angepasst werden.
+
+- Screen Sharing
+Screen Sharing wurde in den Einstellungen aktiviert, jedoch kann der Raspi nicht
+mit der Maus gesteuert werden.
+
+- Die Anwendung startet im Vollbildmodus, kann aber durch wischen von oben nach unten minimiert werden.
+Die Packetquellen in `/etc/apt/sources.list` sollten wie folgt gewählt sein:
+
+```bash
+deb http://deb.debian.org/debian bullseye main contrib non-free
+deb http://security.debian.org/debian-security bullseye-security main contrib non-free
+deb http://deb.debian.org/debian bullseye-updates main contrib non-free
+# Uncomment deb-src lines below then 'apt-get update' to enable 'apt-get source'
+# deb-src http://deb.debian.org/debian bullseye main contrib non-free
+# deb-src http://security.debian.org/debian-security bullseye-security main contrib non-free
+```
