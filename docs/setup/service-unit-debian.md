@@ -19,7 +19,7 @@ Description=dieklingel base
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/chromium-browser --enable-features=UseOzonePlatform --ozone-platform=wayland --noerrdialogs --disable-infobars --allow-file-access-from-files --kiosk /home/pi/dieklingel_base/build/web/index.html
+ExecStart=/usr/bin/chromium-browser --enable-features=UseOzonePlatform --ozone-platform=wayland --noerrdialogs --disable-infobars --allow-file-access-from-files --use-fake-ui-for-media-stream --kiosk /home/pi/dieklingel_base/build/web/index.html
 
 [Install]
 ```
