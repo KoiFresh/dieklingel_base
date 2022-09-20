@@ -1,9 +1,9 @@
 name: build-debian-pkg
-on:
-  workflow_run:
-    workflows: ["create-tag"]
-    types:
-      - completed
+#on:
+#  workflow_run:
+#    workflows: ["create-tag"]
+#    types:
+#      - completed
 
 jobs:
   build-debian-pkg:
