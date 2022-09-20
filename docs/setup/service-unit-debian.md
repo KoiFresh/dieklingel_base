@@ -19,7 +19,8 @@ Description=dieklingel base
 
 [Service]
 Type=simple
-ExecStart=WAYLAND_DISPLAY=wayland-0 /usr/bin/firefox-esr --new-instance --kiosk /home/pi/dieklingel_base/build/web/index.html /home/pi/dieklingel_base/build/web/index.html
+Environment="WAYLAND_DISPLAY=wayland-0"
+ExecStart=/usr/bin/firefox-esr --new-instance --kiosk /home/pi/dieklingel_base/build/web/index.html
 
 [Install]
 ```
