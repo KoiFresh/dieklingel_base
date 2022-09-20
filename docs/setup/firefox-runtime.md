@@ -34,14 +34,14 @@ die Klingel verwendet werden kann.
     user_pref("permissions.default.microphone", 1);
     user_pref("permissions.default.camera", 1);
     user_pref("privacy.webrtc.legacyGlobalIndicator", false);
-    user_pref("gfx.webrender.all", true);
+    user_pref("gfx.webrender.all", false);
     ```
 
 4. Ausführen
     Die Klingel kann nun mit Firefox ESR als  Laufzeit Umgebung ausgeführt werden.
 
     ```bash
-    firefox-esr --new-instance --kiosk /home/pi/dieklingel_base/build/web/index.html
+    firefox-esr --kiosk /home/pi/dieklingel_base/build/web/index.html
     ```
 
     Soll die Anwendung z.B. über SSH gestartet werden, so muss dem Befehl

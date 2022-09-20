@@ -19,19 +19,20 @@ Description=dieklingel base
 
 [Service]
 Type=simple
-Environment="WAYLAND_DISPLAY=wayland-0"
-ExecStart=/usr/bin/firefox-esr --new-instance --kiosk /home/pi/dieklingel_base/build/web/index.html
+Environment="DISPLAY=:0"
+ExecStart=/usr/bin/chromium-browser --noerrdialogs --disable-infobars --allow-file-access-from-files --use-fake-ui-for-media-stream --kiosk /home/pi/dieklingel_base/build/web/index.html
 
 [Install]
+WantedBy=default.target
 ```
 
 ❕ Hierbei muss der Pfad am ende des Befehls `ExecStart` dem Pfad der index.html
 Datei des kompilierten Projekts entsprechen. Bei dieser Konfiguration handelt
 es sich um ein Beispiel mit
-[Firefox ESR als Laufzeitumgebung](firefox-runtime.md). Soll statdessen
-Chromium als Laufzeit umgebung verwendet werden, so muss der Befehlt unter
+[Chromium  als Laufzeitumgebung](chromium-runtime.md). Soll statdessen
+Firefox als Laufzeitumgebung verwendet werden, so muss der Befehlt unter
 `ExecStart` an den Befeh von
-[Chromium  als Laufzeitumgebung](chromium-runtime.md) angepasst werden.
+[Firefox ESR als Laufzeitumgebung](firefox-runtime.md) angepasst werden.
 
 Nun sind die Folgenden Befehle möglich um:
 
