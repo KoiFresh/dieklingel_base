@@ -41,7 +41,9 @@ Die Konfigurationsdatei ist im `json` Format. Und Sollte wie folgt aufgebaut sei
       "left": 10
     },
     "screensaver": {
-      "text": "1"
+      "text": "1",
+      "autoenable": true,
+      "timeout": 30
     }
   },
   "signs": [
@@ -120,7 +122,18 @@ Im nachfolgenden Abschnitt sind die Details Eigenschaften beschrieben:
   Der Text, welcher auf dem Bildschirmschoner (Display State: off) dargestellt wird. Anstell von einfachem Text, kann der
   Text mittels Html strukturiert und mittels Css gestaltet werden. z.B. `<span style='color: green'>Hallo</span>`.
 
+- ### viewport.screensaver.autoenable: bool (Not Implemented)
+
+  Gibt an ob der Bildschirmschoner automatisch nach eine Timeout an Inaktiviöt aktiviert werden soll
+
+- ### viewport.screensaver.timeout: int (Not Implemented)
+
+  Legt den Timeout in Sekunden fest, nach denen dieKlingel in den Bildschirmschoner wechselt, wenn für die
+  Dauer des Timeouts keine Aktivität festgelegt wurde. Dies geschieht nur, wenn `viewport.screensaver.autoenable` auf `true`
+  gesetzt ist, andernfalls hat der Timeout keine Auswirkung.
+
 - ### signs: List\<Sign\>
+
   Eine List aus Schildern, welche von der Basis dargestellet werden. Jedes Schild benötigt einen Text, welcher vom Schild angezeigt wird.
   Der Text kann anstelle von einfachem Text auch mit Html gestaltet werden.
   Zudem benötigt jedes schild noch einen Hash, durch welchen das Schild eindeutig zu identifiziern sein sollte. Ein gerät, welches ein bestimmtes

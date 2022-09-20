@@ -7,6 +7,20 @@ import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
 import '../signaling/signaling_client.dart';
 
+class RtcTransceiver {
+  RTCRtpMediaType kind;
+  TransceiverDirection direction;
+
+  RtcTransceiver({required this.kind, required this.direction});
+
+  dynamic toAddableTransiver() {
+    return {
+      "kind": kind,
+      "init": RTCRtpTransceiverInit(direction: direction),
+    };
+  }
+}
+
 class RtcClient extends EventEmitter {
   final SignalingClient _signalingClient;
   final MediaRessource _mediaRessource;
@@ -18,7 +32,6 @@ class RtcClient extends EventEmitter {
   RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
     _signalingClient.addEventListener("message", (message) {
       if (message is! SignalingMessage) return;
-      if (message.sender != recipient) return;
       switch (message.type) {
         case SignalingMessageType.offer:
           emit("state-changed", RtcConnectionState.invited);
@@ -55,7 +68,9 @@ class RtcClient extends EventEmitter {
     });
   }
 
-  Future<RTCPeerConnection> _createRtcPeerConnection() async {
+  Future<RTCPeerConnection> _createRtcPeerConnection({
+    List<RtcTransceiver> transceivers = const [],
+  }) async {
     RTCPeerConnection connection = await createPeerConnection(_iceServers);
     MediaStream? stream = _mediaRessource.stream;
     if (null != stream) {
@@ -64,9 +79,27 @@ class RtcClient extends EventEmitter {
       });
     }
     connection.onIceCandidate = _onNewIceCandidateFound;
+    connection.onIceConnectionState = (RTCIceConnectionState state) {
+      switch (state) {
+        case RTCIceConnectionState.RTCIceConnectionStateDisconnected:
+        case RTCIceConnectionState.RTCIceConnectionStateFailed:
+          //connection.restartIce();
+          break;
+        default:
+          break;
+      }
+    };
     connection.onConnectionState = _onConnectionStateChanged;
-    connection.onRenegotiationNeeded = _onRenegotationNeeded;
     connection.onTrack = _onTrackReceived;
+    // unified-plan has to set explicit
+    for (RtcTransceiver transceiver in transceivers) {
+      await connection.addTransceiver(
+        kind: transceiver.kind,
+        init: RTCRtpTransceiverInit(
+          direction: transceiver.direction,
+        ),
+      );
+    }
     return connection;
   }
 
@@ -94,22 +127,20 @@ class RtcClient extends EventEmitter {
     }
   }
 
-  void _onRenegotationNeeded() {
-    _rtcPeerConnection?.restartIce();
-  }
-
   void _onTrackReceived(RTCTrackEvent event) {
-    if (event.streams.isEmpty) {
-      print("skipt track");
-      return;
-    }
+    if (event.streams.isEmpty) return;
     emit("mediatrack-received", event.streams[0]);
   }
 
-  Future<void> invite(String other,
-      {Map<String, dynamic> options = const {}}) async {
+  Future<void> invite(
+    String other, {
+    Map<String, dynamic> options = const {},
+    List<RtcTransceiver> transceivers = const [],
+  }) async {
     emit("state-changed", RtcConnectionState.connecting);
-    RTCPeerConnection connection = await _createRtcPeerConnection();
+    RTCPeerConnection connection = await _createRtcPeerConnection(
+      transceivers: transceivers,
+    );
     recipient = other;
     RTCSessionDescription offer = await connection.createOffer(options);
     await connection.setLocalDescription(offer);
@@ -133,12 +164,6 @@ class RtcClient extends EventEmitter {
     ));
     RTCSessionDescription answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
-
-    for (RTCIceCandidate candidate in candidates) {
-      connection.addCandidate(candidate);
-    }
-    candidates.clear();
-
     SignalingMessage message = SignalingMessage();
     message.sender = _signalingClient.uid;
     message.recipient = offer.sender;

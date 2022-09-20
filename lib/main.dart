@@ -1,10 +1,12 @@
-import 'dart:convert';
-
-import 'package:dieklingel_base/views/home.dart';
+import 'package:dieklingel_base/components/session_handler.dart';
+import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'globals.dart' as app;
+import 'views/loading_view_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await app.init();
   runApp(const MyApp());
 }
 
@@ -20,37 +22,34 @@ class _MyApp extends State<MyApp> {
 
   @override
   void initState() {
-    init();
     super.initState();
-  }
-
-  void init() async {
-    String configPath = "resources/config/config.json";
-    String rawConfig = await rootBundle.loadString(configPath);
-    dynamic config = jsonDecode(rawConfig);
-
-    EdgeInsetsGeometry insets = EdgeInsets.fromLTRB(
-      config["viewport"]["clip"]["left"] ?? 0,
-      config["viewport"]["clip"]["top"] ?? 0,
-      config["viewport"]["clip"]["right"] ?? 0,
-      config["viewport"]["clip"]["bottom"] ?? 0,
-    );
-    setState(() {
-      geometry = insets;
-    });
   }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Container(
-        color: Colors.black,
-        padding: geometry,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: const Scaffold(
-            body: Home(),
+    return Container(
+      color: Colors.black,
+      padding: geometry,
+      child: ClipRRect(
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        borderRadius: BorderRadius.circular(20),
+        child: MaterialApp(
+          scrollBehavior: TouchScrollBehavior(),
+          home: Scaffold(
+            body: LoadingViewPage(
+              onLoad: (config) {
+                EdgeInsets insets = EdgeInsets.fromLTRB(
+                  config["viewport"]?["clip"]?["left"] ?? 0.0,
+                  config["viewport"]?["clip"]?["top"] ?? 0.0,
+                  config["viewport"]?["clip"]?["right"] ?? 0.0,
+                  config["viewport"]?["clip"]?["bottom"] ?? 0.0,
+                );
+                setState(() {
+                  geometry = insets;
+                });
+              },
+            ),
           ),
         ),
       ),

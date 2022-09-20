@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import setproctitle
 import eel
 
 PORT = 8000
@@ -17,5 +16,4 @@ def main():
     #eel.start('index.html', port=PORT,close_callback=close_callback)
 
 if __name__ == "__main__":
-    setproctitle.setproctitle("dieklingel-runner")
     main()

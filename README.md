@@ -2,46 +2,33 @@
 
 ![alt dieKlingel Logo und Text](https://dieklingel.de/_nuxt/image/5577c6.webp)
 
-This project is the lightweight front-end for dieKlingel, writte with flutter.
-Check out our website to get more informatoon
+Dieses Projekt beinhaltet die Basis des dieKlingel Projeckts.
 
-## Getting Started
+## Build
 
-### Build
+1. Build abhängigkeiten installieren:
+    Um dieses Projekt zu bauen wird das Flutter SDK benötigt, wie dies installiert werden kann, kann hier nachgelesen werden.
+    <https://docs.flutter.dev/get-started/install/linux>
 
-install build dependecies:
-to build this project you will need to install the flutter sdk, herefore chekout the website.
-https://docs.flutter.dev/get-started/install/linux
+2. Build
+    Folgende befehle müssen ausgeführt werden, um das Projekt zu Bauen.
 
-to build this project run the following:
-
-```
-flutter build web
-```
+    ```bash
+    flutter pub get
+    flutter build web
+    ```
 
 ### Run
 
-install run dependencies:
+1. Laufzeit-abhägingkeiten installieren:
+    um die Anwendung auszuführen, wird chromium benötigt.
 
-```
-apt-get install pip3 python3
-pip3 install eel setproctitle
-```
+    ```bash
+    sudo apt-get install chromium-browser
+     ```
 
-change the directory to the build dir:
+2. Anwendung ausführen:
 
-```
-cd ./build/web
-```
-
-add executable rights to the runner:
-
-```
-chmod +x ./runner.py
-```
-
-run the project:
-
-```
-./runner.py
-```
+    ```bash
+    chromium-browser --noerrdialogs --disable-infobars --allow-file-access-from-files --kiosk build/web/index.html &> /dev/null
+    ```

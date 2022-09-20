@@ -1,6 +1,4 @@
 import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 
@@ -11,6 +9,7 @@ class Numpad extends StatefulWidget {
     required this.height,
     this.onPasscodeChanged,
     this.onUnlock,
+    this.onLongUnlock,
     this.randomizePasscodeAfterUnlock = true,
     this.textStyle,
     this.selectedTextStyle,
@@ -20,6 +19,7 @@ class Numpad extends StatefulWidget {
   final bool randomizePasscodeAfterUnlock;
   final Function(String passcode)? onPasscodeChanged;
   final Function(String passcode)? onUnlock;
+  final Function(String passcode)? onLongUnlock;
   final TextStyle? textStyle;
   final TextStyle? selectedTextStyle;
 
@@ -32,7 +32,7 @@ class _Numpad extends State<Numpad> {
 
   @override
   void initState() {
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future(() {
       _randomize();
     });
     super.initState();
@@ -84,6 +84,9 @@ class _Numpad extends State<Numpad> {
             Padding(
               padding: EdgeInsets.only(right: widget.width / 10),
               child: MaterialButton(
+                onLongPress: () {
+                  widget.onLongUnlock?.call(passcode);
+                },
                 onPressed: (() {
                   widget.onUnlock?.call(passcode);
                   if (widget.randomizePasscodeAfterUnlock) {
