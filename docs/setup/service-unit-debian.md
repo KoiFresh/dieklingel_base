@@ -8,7 +8,7 @@ Eine Service Datei anlegen:
 
 ```bash
 cd /etc/systemd/user
-touch dieklingel.service
+nano dieklingel.service
 ```
 
 In die Datei kommt nun folgender inhalt:
@@ -19,12 +19,18 @@ Description=dieklingel base
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/chromium-browser --enable-features=UseOzonePlatform --ozone-platform=wayland --noerrdialogs --disable-infobars --allow-file-access-from-files --use-fake-ui-for-media-stream --kiosk /home/pi/dieklingel_base/build/web/index.html
+ExecStart=WAYLAND_DISPLAY=wayland-0 /usr/bin/firefox-esr --new-instance --kiosk /home/pi/dieklingel_base/build/web/index.html /home/pi/dieklingel_base/build/web/index.html
 
 [Install]
 ```
 
-❕ Hierbei muss der Pfad am ende des Befehls `ExecStart` dem Pfad der index.html Datei des kompilierten Projekts entsprechen.
+❕ Hierbei muss der Pfad am ende des Befehls `ExecStart` dem Pfad der index.html
+Datei des kompilierten Projekts entsprechen. Bei dieser Konfiguration handelt
+es sich um ein Beispiel mit
+[Firefox ESR als Laufzeitumgebung](firefox-runtime.md). Soll statdessen
+Chromium als Laufzeit umgebung verwendet werden, so muss der Befehlt unter
+`ExecStart` an den Befeh von
+[Chromium  als Laufzeitumgebung](chromium-runtime.md) angepasst werden.
 
 Nun sind die Folgenden Befehle möglich um:
 

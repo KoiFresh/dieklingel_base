@@ -2,7 +2,7 @@
 
 Im folgenden Abschnitt ist beschrieben, wie Gnome auf einem RaspberryPi 4
 aufgesetzt werden kann. Der hier beschriebene Prozess ist der empfohlenen
-Ablauf, zum Aufsetzen der Desktop umgebunge, in welcher dieKlingel läuft
+Ablauf, zum Aufsetzen der Desktop Umgebung, in welcher dieKlingel läuft.
 
 1. Den Raspberry Pi Imager herunterladen
     - Der Raspberry Pi Imager kann von hier
@@ -30,19 +30,32 @@ Ablauf, zum Aufsetzen der Desktop umgebunge, in welcher dieKlingel läuft
    sudo systemctl set-default graphical.target
    ```
 
-   die Graphische Oberfläche als Default gesetzt werden. Nach einem weiteren
-   Neustart sollte der Raspi nun in Gnome starten. Alle weiteren Einstellungen
-   können in der Einstellungen App von Gnome ausgeführt werden.
+   die Graphische Oberfläche als Default gesetzt werden.
 
 4. Denn Networkmanager dem Autostart hinzufügen
-  
+
+    ```bash
+    sudo systemctl enable NetworkManager
+    ```
+
+    Nach einem weiteren Neustart sollte der Raspi nun in Gnome starten. Alle
+    weiteren Einstellungen können in der Einstellungen App von Gnome
+    ausgeführt werden.
+
 ## Konfiguration
 
-Nachdem der Display installiert ist, können noch ein paar dinge konfiguriert werden:
+Nachdem der Display Manager installiert ist, können noch ein paar dinge konfiguriert werden:
 
 - AutoLogin
 - Display drehen
-- Vnc aktiviern
+- VNC aktiviern
+- 'Bildschirm automatisch ausschalten' deaktivieren
+
+    ```bash
+    gsettings set org.gnome.ControlCenter last-panel 'power'
+    gsettings set org.gnome.desktop.session idle-delay uint32 0
+    ```
+
 - Inaktivitätsmeldung deaktivieren
 
     ```bash
@@ -51,7 +64,7 @@ Nachdem der Display installiert ist, können noch ein paar dinge konfiguriert we
 
 ## Known Issues
 
-- Display Drehen
+- ✅ Display Drehen
 
 Beim Drehen des Displays in Gnome wurde der Touch nicht mitgedreht. Dies kann
 behoben werden indem eine Datei unter
@@ -65,18 +78,6 @@ ENV{LIBINPUT_CALIBRATION_MATRIX}="0 -1 1 1 0 0 0"
 Nach einem Neustart, sollte die Toucheingabe um 90° im Uhrezigersinn gedreht
 sein. Je nach Bildschrimausrichtung, kann die Rotationsmatrix angepasst werden.
 
-- Screen Sharing
-Screen Sharing wurde in den Einstellungen aktiviert, jedoch kann der Raspi nicht
-mit der Maus gesteuert werden.
-
-- Die Anwendung startet im Vollbildmodus, kann aber durch wischen von oben nach unten minimiert werden.
-Die Packetquellen in `/etc/apt/sources.list` sollten wie folgt gewählt sein:
-
-```bash
-deb http://deb.debian.org/debian bullseye main contrib non-free
-deb http://security.debian.org/debian-security bullseye-security main contrib non-free
-deb http://deb.debian.org/debian bullseye-updates main contrib non-free
-# Uncomment deb-src lines below then 'apt-get update' to enable 'apt-get source'
-# deb-src http://deb.debian.org/debian bullseye main contrib non-free
-# deb-src http://security.debian.org/debian-security bullseye-security main contrib non-free
-```
+- ⚠️ Screen Sharing
+Screen Sharing wurde in den Einstellungen aktiviert, jedoch kann der Raspi
+nicht mit der Maus gesteuert werden.
