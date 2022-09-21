@@ -1,8 +1,9 @@
-import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../components/app_settings.dart';
 import '../messaging/messaging_client.dart';
+import '../rtc/rtc_clients_model.dart';
 
 class MenueViewPage extends StatefulWidget {
   const MenueViewPage({Key? key}) : super(key: key);
@@ -32,6 +33,9 @@ class _MenueViewPage extends State<MenueViewPage> {
             Text(
               "current mqtt state: ${Provider.of<MessagingClient>(context).isConnected()}",
             ),
+            Text(
+              "last log: ${Provider.of<AppSettings>(context).log}",
+            )
           ],
         ),
       ),

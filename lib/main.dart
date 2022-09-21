@@ -1,18 +1,19 @@
-import 'package:dieklingel_base/components/app_settings.dart';
-import 'package:dieklingel_base/components/session_handler.dart';
-import 'package:dieklingel_base/messaging/messaging_client.dart';
-import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
-import 'package:dieklingel_base/signaling/signaling_client.dart';
-import 'package:dieklingel_base/signaling/signaling_message_type.dart';
-import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
+
+import 'components/app_settings.dart';
+import 'components/session_handler.dart';
 import 'globals.dart' as app;
 import 'media/media_ressource.dart';
+import 'messaging/messaging_client.dart';
 import 'rtc/rtc_client.dart';
+import 'rtc/rtc_clients_model.dart';
 import 'rtc/rtc_connection_state.dart';
+import 'signaling/signaling_client.dart';
 import 'signaling/signaling_message.dart';
+import 'signaling/signaling_message_type.dart';
+import 'touch_scroll_behavior.dart';
 import 'views/loading_view_page.dart';
 
 void main() async {
@@ -128,7 +129,8 @@ class _MyApp extends State<MyApp> {
 
     client.recipient = offerMessage.sender;
 
-    //log("request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}}}");
+    appSettings.log =
+        "request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}";
 
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
@@ -169,6 +171,7 @@ class _MyApp extends State<MyApp> {
                 password: config["mqtt"]["password"],
               );
               String uid = config["uid"] ?? "";
+              appSettings.log = "System started with uid: $uid";
               signalingClient.uid = uid;
               signalingClient.signalingTopic = "rtc/signaling";
               messagingClient

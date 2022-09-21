@@ -1,26 +1,19 @@
 import 'dart:convert';
-
 import 'package:camera/camera.dart';
-import 'package:dieklingel_base/components/app_settings.dart';
-import 'package:dieklingel_base/crypto/sha2562.dart';
-import 'package:dieklingel_base/messaging/messaging_client.dart';
-import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
-import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
-import 'package:dieklingel_base/views/menue_view_page.dart';
-import 'package:dieklingel_base/views/screensaver_view.dart';
-import 'package:dieklingel_base/views/signs_view.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:provider/provider.dart';
-import 'numpad_view.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../signaling/signaling_message.dart';
-import '../signaling/signaling_message_type.dart';
-import '../views/components/sign.dart';
-import '../rtc/rtc_client.dart';
-import '../signaling/signaling_client.dart';
-import '../media/media_ressource.dart';
+import 'components/sign.dart';
+import 'menue_view_page.dart';
+import 'numpad_view.dart';
+import 'screensaver_view.dart';
+import 'signs_view.dart';
+import '../components/app_settings.dart';
+import '../crypto/sha2562.dart';
 import '../globals.dart' as app;
+import '../messaging/messaging_client.dart';
+import '../rtc/rtc_clients_model.dart';
+import '../signaling/signaling_client.dart';
 
 class HomeViewPage extends StatefulWidget {
   const HomeViewPage({Key? key, required this.config}) : super(key: key);
@@ -32,13 +25,7 @@ class HomeViewPage extends StatefulWidget {
 }
 
 class _HomeViewPage extends State<HomeViewPage> {
-  //final List<RtcClient> _rtcClients = [];
-  //late final MessagingClient _messagingClient;
-  //late final SignalingClient _signalingClient;
-  //late String uid;
   late final Map<String, dynamic> config = widget.config;
-
-  String _snapshot = "";
 
   MessagingClient get messagingClient {
     return Provider.of<MessagingClient>(context, listen: false);
@@ -52,80 +39,17 @@ class _HomeViewPage extends State<HomeViewPage> {
     return Provider.of<RtcClientsModel>(context, listen: false);
   }
 
-  set snapshot(String value) {
-    _snapshot = value;
-    if (!messagingClient.isConnected()) return;
-    messagingClient.send(
-      "io/camera/snapshot",
-      snapshot,
-    );
-  }
-
-  String get snapshot {
-    return _snapshot;
+  AppSettings get appSettings {
+    return Provider.of<AppSettings>(context, listen: false);
   }
 
   @override
   void initState() {
     super.initState();
-    init();
-  }
-
-  void init() async {
-    try {
-      _registerListerners();
-      /* messagingClient.send(
-        "${uid}system/log",
-        "system initialized with uid: $uid",
-      ); */
-      /* messagingClient.send(
-        "${uid}io/display/state",
-        "on",
-      );*/
-      /*_messagingClient.addEventListener(
-        "message:${uid}firebase/notification/token/add",
-        (raw) async {
-          Map<String, dynamic> message = jsonDecode(raw);
-          if (null == message["hash"] || null == message["token"]) return;
-          String hash = message["hash"];
-          String token = message["token"];
-          List<String>? tokens = app.preferences.getStringList("sign/$hash");
-          tokens ??= List<String>.empty(growable: true);
-          if (!tokens.contains(token)) tokens.add(token);
-          app.preferences.setStringList("sign/$hash", tokens);
-          _messagingClient.send(
-            "${uid}system/log",
-            "token for hash '$hash' set",
-          );
-        },
-      ); */
-      // init signaling client
-
-    } catch (exception) {
-      print(exception);
-    }
-  }
-
-  void log(String message) {
-    if (!messagingClient.isConnected()) return;
-    messagingClient.send(
-      "system/log",
-      message,
-    );
-  }
-
-  void _registerListerners() {
-    messagingClient.messageController.stream.listen((event) {
-      if (event.topic == "io/camera/request") {
-        takePicture().then((value) {
-          snapshot = value;
-        });
-      }
-    });
   }
 
   void _onUnlock(String passcode) {
-    log("The unlock button was tapped");
+    appSettings.log = "The unlock button was tapped";
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
     if (!messagingClient.isConnected()) return;
     messagingClient.send(
@@ -135,13 +59,13 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _onSignTap(String hash) async {
-    log("The Sign with hash '$hash' was tapped");
+    appSettings.log = "The Sign with hash '$hash' was tapped";
     List<String>? tokens = app.preferences.getStringList("sign/$hash");
     if (null == tokens) {
-      log("The Sign '$hash' has no tokens");
+      appSettings.log = "The Sign '$hash' has no tokens";
       return;
     }
-    snapshot =
+    String snapshot =
         config["notification"]["snapshot"] == true ? await takePicture() : "";
     Map<String, dynamic> message = {
       "tokens": tokens,
@@ -155,57 +79,12 @@ class _HomeViewPage extends State<HomeViewPage> {
         jsonEncode(message),
       );
     }
-    log("A Notification for the Sign '$hash' was send");
+    appSettings.log = "A Notification for the Sign '$hash' was send";
   }
 
   void _onScreensaverTap() {
     Provider.of<AppSettings>(context, listen: false).displayIsActive = true;
   }
-
-  /* void createRtcClient(SignalingMessage offerMessage) async {
-    Map<String, dynamic> iceServers = config["webrtc"]["ice"];
-    MediaRessource mediaRessource = MediaRessource();
-    RtcClient client = RtcClient(
-      signalingClient,
-      mediaRessource,
-      iceServers,
-      onMediatrackReceived: ((mediaStream) {
-        if (_rtcVideoRenderer.srcObject != null) {
-          MediaStream stream = _rtcVideoRenderer.srcObject!;
-          for (MediaStreamTrack audiotrack in mediaStream.getAudioTracks()) {
-            stream.addTrack(audiotrack);
-          }
-          _rtcVideoRenderer.srcObject = stream;
-        } else {
-          _rtcVideoRenderer.srcObject = mediaStream;
-        }
-      }),
-      onStateChanged: ((state, client) {
-        switch (state) {
-          case RtcConnectionState.disconnected:
-            //_rtcClients.remove(client);
-            rtcClientsModel.remove(client);
-            break;
-          default:
-            break;
-        }
-        if (messagingClient.isConnected()) {
-          messagingClient.send(
-            "${uid}rtc/call/state",
-            state.toString(),
-          );
-        }
-      }),
-    );
-
-    client.recipient = offerMessage.sender;
-
-    log("request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}}}");
-
-    await mediaRessource.open(true, true);
-    client.answer(offerMessage);
-    rtcClientsModel.add(client);
-  } */
 
   Future<String> takePicture() async {
     final List<CameraDescription> cameras = await availableCameras();

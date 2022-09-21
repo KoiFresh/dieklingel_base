@@ -1,8 +1,7 @@
 import 'dart:async';
-
-import 'package:dieklingel_base/messaging/mqtt_message.dart';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'mqtt_message.dart';
 import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
 
@@ -63,11 +62,10 @@ class MessagingClient extends ChangeNotifier {
     if (null == hostname) {
       throw Exception("The hostname cannot be null");
     }
-    MqttClient client =
-        MqttClientFactory.create(hostname, "", maxConnectionAttempts: 3);
+    MqttClient client = MqttClientFactory.create(hostname, "");
     client.port = port;
     client.keepAlivePeriod = 20;
-    client.disconnectOnNoResponsePeriod = 10;
+    client.disconnectOnNoResponsePeriod = 30;
     client.setProtocolV311();
     client.autoReconnect = true;
     client.onConnected = () {
@@ -79,7 +77,7 @@ class MessagingClient extends ChangeNotifier {
       notifyListeners();
     };
     client.onAutoReconnect = () {
-      print("reconnect");
+      print("reconnected");
       notifyListeners();
     };
 
