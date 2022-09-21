@@ -10,11 +10,11 @@ class MessagingClient extends ChangeNotifier {
   String? hostname;
   int? port;
   MqttClient? _client;
-  int failedConnectionAttempts = 0;
+  String prefix;
   StreamController<MqttTopicMessage> messageController =
       StreamController<MqttTopicMessage>.broadcast();
 
-  MessagingClient({this.hostname, this.port});
+  MessagingClient({this.hostname, this.port, this.prefix = ""});
 
   /* @override
   void addEventListener(String event, Function(dynamic data) callback) {
@@ -34,7 +34,7 @@ class MessagingClient extends ChangeNotifier {
     if (null == _client) {
       throw Exception("cannot listen to topics before connected");
     }
-    _client!.subscribe(topic, MqttQos.exactlyOnce);
+    _client!.subscribe("$prefix$topic", MqttQos.exactlyOnce);
     return this;
   }
 
@@ -46,7 +46,11 @@ class MessagingClient extends ChangeNotifier {
     }
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
-    _client!.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+    _client!.publishMessage(
+      "$prefix$topic",
+      MqttQos.exactlyOnce,
+      builder.payload!,
+    );
   }
 
   Future<void> connect({String? username, String? password}) async {
@@ -68,7 +72,6 @@ class MessagingClient extends ChangeNotifier {
     client.autoReconnect = true;
     client.onConnected = () {
       print("connected");
-      failedConnectionAttempts = 0;
       notifyListeners();
     };
     client.onDisconnected = () {
@@ -76,7 +79,6 @@ class MessagingClient extends ChangeNotifier {
       notifyListeners();
     };
     client.onAutoReconnect = () {
-      failedConnectionAttempts++;
       print("reconnect");
       notifyListeners();
     };

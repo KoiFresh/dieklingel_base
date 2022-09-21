@@ -8,11 +8,13 @@ class SessionHandler extends StatefulWidget {
     required this.child,
     required this.timeout,
     this.onTimeout,
+    this.enabled = true,
   }) : super(key: key);
 
   final Widget child;
   final Duration timeout;
   final Function? onTimeout;
+  final bool enabled;
 
   @override
   State<StatefulWidget> createState() => _SessionHandler();
@@ -28,10 +30,12 @@ class _SessionHandler extends State<SessionHandler> {
 
   void _onActivityDetected() {
     sessionTimeout?.cancel();
+    if (!widget.enabled) return;
     sessionTimeout = Timer(widget.timeout, _onInactivity);
   }
 
   void _onInactivity() {
+    if (!widget.enabled) return;
     widget.onTimeout?.call();
   }
 

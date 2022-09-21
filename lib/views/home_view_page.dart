@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:camera/camera.dart';
+import 'package:dieklingel_base/components/app_settings.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
 import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
@@ -32,13 +33,11 @@ class HomeViewPage extends StatefulWidget {
 
 class _HomeViewPage extends State<HomeViewPage> {
   //final List<RtcClient> _rtcClients = [];
-  final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
   //late final MessagingClient _messagingClient;
   //late final SignalingClient _signalingClient;
-  late String uid;
+  //late String uid;
   late final Map<String, dynamic> config = widget.config;
 
-  bool _displayState = false;
   String _snapshot = "";
 
   MessagingClient get messagingClient {
@@ -53,25 +52,11 @@ class _HomeViewPage extends State<HomeViewPage> {
     return Provider.of<RtcClientsModel>(context, listen: false);
   }
 
-  set displayState(bool value) {
-    if (value == _displayState) return;
-    _displayState = value;
-    if (!messagingClient.isConnected()) return;
-    messagingClient.send(
-      "${uid}io/display/state",
-      _displayState ? "on" : "off",
-    );
-  }
-
-  bool get displayState {
-    return _displayState;
-  }
-
   set snapshot(String value) {
     _snapshot = value;
     if (!messagingClient.isConnected()) return;
     messagingClient.send(
-      "${uid}io/camera/snapshot",
+      "io/camera/snapshot",
       snapshot,
     );
   }
@@ -83,8 +68,6 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
-    _rtcVideoRenderer.initialize();
-    uid = config["uid"] ?? "";
     init();
   }
 
@@ -117,18 +100,7 @@ class _HomeViewPage extends State<HomeViewPage> {
         },
       ); */
       // init signaling client
-      signalingClient.messageController.stream.listen((message) {
-        switch (message.type) {
-          case SignalingMessageType.candidate:
-            break;
-          case SignalingMessageType.offer:
-            SignalingMessage m = SignalingMessage.fromJson(message.toJson());
-            createRtcClient(m);
-            break;
-          default:
-            break;
-        }
-      });
+
     } catch (exception) {
       print(exception);
     }
@@ -137,18 +109,14 @@ class _HomeViewPage extends State<HomeViewPage> {
   void log(String message) {
     if (!messagingClient.isConnected()) return;
     messagingClient.send(
-      "${uid}system/log",
+      "system/log",
       message,
     );
   }
 
   void _registerListerners() {
     messagingClient.messageController.stream.listen((event) {
-      if (event.topic == "${uid}io/display/state") {
-        setState(() {
-          displayState = event.message == "on";
-        });
-      } else if (event.topic == "${uid}io/camera/request") {
+      if (event.topic == "io/camera/request") {
         takePicture().then((value) {
           snapshot = value;
         });
@@ -161,7 +129,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
     if (!messagingClient.isConnected()) return;
     messagingClient.send(
-      "${uid}io/action/unlock/passcode",
+      "io/action/unlock/passcode",
       passcodeHash,
     );
   }
@@ -177,13 +145,13 @@ class _HomeViewPage extends State<HomeViewPage> {
         config["notification"]["snapshot"] == true ? await takePicture() : "";
     Map<String, dynamic> message = {
       "tokens": tokens,
-      "title": "Jemand steht vor deiner Tuer ($uid)",
+      "title": "Jemand steht vor deiner Tuer",
       "body": "https://dieklingel.com/",
       "image": snapshot,
     };
     if (messagingClient.isConnected()) {
       messagingClient.send(
-        "${uid}firebase/notification/send",
+        "firebase/notification/send",
         jsonEncode(message),
       );
     }
@@ -191,12 +159,10 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _onScreensaverTap() {
-    setState(() {
-      _displayState = true;
-    });
+    Provider.of<AppSettings>(context, listen: false).displayIsActive = true;
   }
 
-  void createRtcClient(SignalingMessage offerMessage) async {
+  /* void createRtcClient(SignalingMessage offerMessage) async {
     Map<String, dynamic> iceServers = config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
     RtcClient client = RtcClient(
@@ -239,8 +205,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
     rtcClientsModel.add(client);
-    //_rtcClients.add(client);
-  }
+  } */
 
   Future<String> takePicture() async {
     final List<CameraDescription> cameras = await availableCameras();
@@ -339,7 +304,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     return Scaffold(
       body: Stack(
         children: [
-          displayState
+          Provider.of<AppSettings>(context).displayIsActive
               ? _awake(
                   context,
                   width: width,
