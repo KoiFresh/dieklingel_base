@@ -39,7 +39,7 @@ class _LoadingViewPage extends State<LoadingViewPage> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: ((context) => ErrorViewPage()),
+          builder: ((context) => const ErrorViewPage()),
         ),
       );
     } finally {

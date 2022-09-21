@@ -1,4 +1,8 @@
+import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../messaging/messaging_client.dart';
 
 class MenueViewPage extends StatefulWidget {
   const MenueViewPage({Key? key}) : super(key: key);
@@ -21,6 +25,12 @@ class _MenueViewPage extends State<MenueViewPage> {
                 Navigator.popUntil(context, (route) => route.isFirst);
               },
               child: const Text("foce reload"),
+            ),
+            Text(
+              "current RTC's: ${Provider.of<RtcClientsModel>(context).clients.length.toString()}",
+            ),
+            Text(
+              "current mqtt state: ${Provider.of<MessagingClient>(context).isConnected()}",
             ),
           ],
         ),

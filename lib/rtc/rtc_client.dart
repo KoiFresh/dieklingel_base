@@ -32,7 +32,17 @@ class RtcClient extends ChangeNotifier {
 
   RTCPeerConnection? _rtcPeerConnection;
   List<RTCIceCandidate> candidates = List.empty(growable: true);
-  RtcConnectionState rtcConnectionState = RtcConnectionState.disconnected;
+  RtcConnectionState _rtcConnectionState = RtcConnectionState.disconnected;
+
+  set rtcConnectionState(RtcConnectionState state) {
+    _rtcConnectionState = state;
+    notifyListeners();
+    onStateChanged?.call(state, this);
+  }
+
+  RtcConnectionState get rtcConnectionState {
+    return _rtcConnectionState;
+  }
 
   RtcClient(
     this._signalingClient,

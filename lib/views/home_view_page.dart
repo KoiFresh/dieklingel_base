@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'package:camera/camera.dart';
 import 'package:dieklingel_base/crypto/sha2562.dart';
 import 'package:dieklingel_base/messaging/messaging_client.dart';
+import 'package:dieklingel_base/rtc/rtc_clients_model.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:dieklingel_base/views/menue_view_page.dart';
 import 'package:dieklingel_base/views/screensaver_view.dart';
 import 'package:dieklingel_base/views/signs_view.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:provider/provider.dart';
 import 'numpad_view.dart';
 import 'package:flutter/material.dart';
 
@@ -29,21 +31,33 @@ class HomeViewPage extends StatefulWidget {
 }
 
 class _HomeViewPage extends State<HomeViewPage> {
-  final List<RtcClient> _rtcClients = [];
+  //final List<RtcClient> _rtcClients = [];
   final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
-  late final MessagingClient _messagingClient;
-  late final SignalingClient _signalingClient;
+  //late final MessagingClient _messagingClient;
+  //late final SignalingClient _signalingClient;
   late String uid;
   late final Map<String, dynamic> config = widget.config;
 
   bool _displayState = false;
   String _snapshot = "";
 
+  MessagingClient get messagingClient {
+    return Provider.of<MessagingClient>(context, listen: false);
+  }
+
+  SignalingClient get signalingClient {
+    return Provider.of<SignalingClient>(context, listen: false);
+  }
+
+  RtcClientsModel get rtcClientsModel {
+    return Provider.of<RtcClientsModel>(context, listen: false);
+  }
+
   set displayState(bool value) {
     if (value == _displayState) return;
     _displayState = value;
-    if (!_messagingClient.isConnected()) return;
-    _messagingClient.send(
+    if (!messagingClient.isConnected()) return;
+    messagingClient.send(
       "${uid}io/display/state",
       _displayState ? "on" : "off",
     );
@@ -55,8 +69,8 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   set snapshot(String value) {
     _snapshot = value;
-    if (!_messagingClient.isConnected()) return;
-    _messagingClient.send(
+    if (!messagingClient.isConnected()) return;
+    messagingClient.send(
       "${uid}io/camera/snapshot",
       snapshot,
     );
@@ -75,24 +89,16 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void init() async {
-    _messagingClient = MessagingClient(
-      config["mqtt"]["address"] as String,
-      config["mqtt"]["port"] as int,
-    );
     try {
-      await _messagingClient.connect(
-        username: config["mqtt"]["username"],
-        password: config["mqtt"]["password"],
-      );
       _registerListerners();
-      _messagingClient.send(
+      /* messagingClient.send(
         "${uid}system/log",
         "system initialized with uid: $uid",
-      );
-      _messagingClient.send(
+      ); */
+      /* messagingClient.send(
         "${uid}io/display/state",
         "on",
-      );
+      );*/
       /*_messagingClient.addEventListener(
         "message:${uid}firebase/notification/token/add",
         (raw) async {
@@ -111,12 +117,7 @@ class _HomeViewPage extends State<HomeViewPage> {
         },
       ); */
       // init signaling client
-      _signalingClient = SignalingClient.fromMessagingClient(
-        _messagingClient,
-        "${uid}rtc/signaling",
-        uid,
-      );
-      _signalingClient.messageController.stream.listen((message) {
+      signalingClient.messageController.stream.listen((message) {
         switch (message.type) {
           case SignalingMessageType.candidate:
             break;
@@ -134,15 +135,15 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void log(String message) {
-    if (!_messagingClient.isConnected()) return;
-    _messagingClient.send(
+    if (!messagingClient.isConnected()) return;
+    messagingClient.send(
       "${uid}system/log",
       message,
     );
   }
 
   void _registerListerners() {
-    _messagingClient.messageController.stream.listen((event) {
+    messagingClient.messageController.stream.listen((event) {
       if (event.topic == "${uid}io/display/state") {
         setState(() {
           displayState = event.message == "on";
@@ -158,8 +159,8 @@ class _HomeViewPage extends State<HomeViewPage> {
   void _onUnlock(String passcode) {
     log("The unlock button was tapped");
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
-    if (!_messagingClient.isConnected()) return;
-    _messagingClient.send(
+    if (!messagingClient.isConnected()) return;
+    messagingClient.send(
       "${uid}io/action/unlock/passcode",
       passcodeHash,
     );
@@ -180,8 +181,8 @@ class _HomeViewPage extends State<HomeViewPage> {
       "body": "https://dieklingel.com/",
       "image": snapshot,
     };
-    if (_messagingClient.isConnected()) {
-      _messagingClient.send(
+    if (messagingClient.isConnected()) {
+      messagingClient.send(
         "${uid}firebase/notification/send",
         jsonEncode(message),
       );
@@ -199,7 +200,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     Map<String, dynamic> iceServers = config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
     RtcClient client = RtcClient(
-      _signalingClient,
+      signalingClient,
       mediaRessource,
       iceServers,
       onMediatrackReceived: ((mediaStream) {
@@ -216,13 +217,14 @@ class _HomeViewPage extends State<HomeViewPage> {
       onStateChanged: ((state, client) {
         switch (state) {
           case RtcConnectionState.disconnected:
-            _rtcClients.remove(client);
+            //_rtcClients.remove(client);
+            rtcClientsModel.remove(client);
             break;
           default:
             break;
         }
-        if (_messagingClient.isConnected()) {
-          _messagingClient.send(
+        if (messagingClient.isConnected()) {
+          messagingClient.send(
             "${uid}rtc/call/state",
             state.toString(),
           );
@@ -232,11 +234,12 @@ class _HomeViewPage extends State<HomeViewPage> {
 
     client.recipient = offerMessage.sender;
 
-    log("request to start rtc acknowledged for ${client.recipient}, active calls: ${_rtcClients.length}}");
+    log("request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}}}");
 
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
-    _rtcClients.add(client);
+    rtcClientsModel.add(client);
+    //_rtcClients.add(client);
   }
 
   Future<String> takePicture() async {
@@ -357,6 +360,6 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void dispose() {
     super.dispose();
-    _messagingClient.disconnect();
+    messagingClient.disconnect();
   }
 }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class ErrorViewPage extends StatelessWidget {
-  ErrorViewPage({super.key, this.message = ""});
+  const ErrorViewPage({super.key, this.message = ""});
 
-  String message;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +12,9 @@ class ErrorViewPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("an error occured " + message),
+            Text("an error occured $message"),
             MaterialButton(
-              child: Text("Reload"),
+              child: const Text("Reload"),
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },

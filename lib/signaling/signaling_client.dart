@@ -1,35 +1,33 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+
 import 'signaling_message.dart';
 import '../messaging/messaging_client.dart';
 
-class SignalingClient {
+class SignalingClient extends ChangeNotifier {
   final MessagingClient _messagingClient;
-  final String _signalingTopic;
-  final String _uid;
+  String signalingTopic;
+  String uid;
   final StreamController<SignalingMessage> broadcastController =
-      StreamController<SignalingMessage>();
+      StreamController<SignalingMessage>.broadcast();
   final StreamController<SignalingMessage> messageController =
-      StreamController<SignalingMessage>();
-
-  String get uid {
-    return _uid;
-  }
+      StreamController<SignalingMessage>.broadcast();
 
   SignalingClient.fromMessagingClient(
-    this._messagingClient,
-    this._signalingTopic,
-    this._uid,
-  ) {
+    this._messagingClient, {
+    this.signalingTopic = "",
+    this.uid = "",
+  }) {
     _messagingClient.messageController.stream.listen((event) {
-      if (_signalingTopic != event.topic) return;
+      if (signalingTopic != event.topic) return;
       try {
         SignalingMessage message =
             SignalingMessage.fromJson(jsonDecode(event.message));
         if ("" == message.recipient) {
           broadcastController.add(message);
-        } else if (_uid == message.recipient) {
+        } else if (uid == message.recipient) {
           messageController.add(message);
         }
       } catch (exception) {
@@ -59,7 +57,10 @@ class SignalingClient {
   }
 
   void send(SignalingMessage message) {
+    if (signalingTopic == "") {
+      throw Exception("the signaling topic cannot be ''");
+    }
     String raw = jsonEncode(message.toJson());
-    _messagingClient.send(_signalingTopic, raw);
+    _messagingClient.send(signalingTopic, raw);
   }
 }

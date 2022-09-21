@@ -1,18 +1,20 @@
 import 'dart:async';
 
 import 'package:dieklingel_base/messaging/mqtt_message.dart';
+import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
 
-class MessagingClient {
-  String hostname;
-  int port;
+class MessagingClient extends ChangeNotifier {
+  String? hostname;
+  int? port;
   MqttClient? _client;
+  int failedConnectionAttempts = 0;
   StreamController<MqttTopicMessage> messageController =
-      StreamController<MqttTopicMessage>();
+      StreamController<MqttTopicMessage>.broadcast();
 
-  MessagingClient(this.hostname, this.port);
+  MessagingClient({this.hostname, this.port});
 
   /* @override
   void addEventListener(String event, Function(dynamic data) callback) {
@@ -27,6 +29,14 @@ class MessagingClient {
     }
     super.addEventListener(event, callback);
   }*/
+
+  MessagingClient listen(String topic) {
+    if (null == _client) {
+      throw Exception("cannot listen to topics before connected");
+    }
+    _client!.subscribe(topic, MqttQos.exactlyOnce);
+    return this;
+  }
 
   void send(String topic, String message) {
     if (null == _client) {
@@ -45,14 +55,34 @@ class MessagingClient {
         "the client has to be disconnected, before in can be connected",
       );
     }
-    MqttClient client = MqttClientFactory.create(hostname, "");
+    String? hostname = this.hostname;
+    if (null == hostname) {
+      throw Exception("The hostname cannot be null");
+    }
+    MqttClient client =
+        MqttClientFactory.create(hostname, "", maxConnectionAttempts: 3);
     client.port = port;
     client.keepAlivePeriod = 20;
+    client.disconnectOnNoResponsePeriod = 10;
     client.setProtocolV311();
-    client.onConnected = () {};
-    client.onDisconnected = () {};
+    client.autoReconnect = true;
+    client.onConnected = () {
+      print("connected");
+      failedConnectionAttempts = 0;
+      notifyListeners();
+    };
+    client.onDisconnected = () {
+      print("disconnected");
+      notifyListeners();
+    };
+    client.onAutoReconnect = () {
+      failedConnectionAttempts++;
+      print("reconnect");
+      notifyListeners();
+    };
 
     await client.connect(username, password);
+
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
       MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
       String topic = c[0].topic;

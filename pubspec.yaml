@@ -45,6 +45,7 @@ dependencies:
   crypto: ^3.0.2
   file_picker: ^5.0.1
   audioplayers: ^1.0.1
+  provider: ^6.0.3
 
 dev_dependencies:
   flutter_test:
