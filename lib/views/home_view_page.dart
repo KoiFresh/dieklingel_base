@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'components/sign.dart';
+import 'components/user_notification.dart';
 import 'menue_view_page.dart';
 import 'numpad_view.dart';
 import 'screensaver_view.dart';
@@ -26,6 +27,8 @@ class HomeViewPage extends StatefulWidget {
 
 class _HomeViewPage extends State<HomeViewPage> {
   late final Map<String, dynamic> config = widget.config;
+
+  bool notifyEnabled = true;
 
   MessagingClient get messagingClient {
     return Provider.of<MessagingClient>(context, listen: false);
@@ -196,6 +199,24 @@ class _HomeViewPage extends State<HomeViewPage> {
                   height: height,
                   onTap: _onScreensaverTap,
                 ),
+          UserNotification(
+            enabled: notifyEnabled,
+            onDismissed: () {
+              setState(() {
+                notifyEnabled = false;
+              });
+              Future.delayed(Duration(seconds: 5), () {
+                setState(() {
+                  notifyEnabled = true;
+                });
+                Future.delayed(Duration(seconds: 5), () {
+                  setState(() {
+                    notifyEnabled = false;
+                  });
+                });
+              });
+            },
+          ),
         ],
       ),
     );
