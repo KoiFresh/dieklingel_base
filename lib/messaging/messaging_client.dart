@@ -1,16 +1,20 @@
+import 'dart:async';
+
+import 'package:dieklingel_base/messaging/mqtt_message.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
-import '../event/event_emitter.dart';
 
-class MessagingClient extends EventEmitter {
+class MessagingClient {
   String hostname;
   int port;
   MqttClient? _client;
+  StreamController<MqttTopicMessage> messageController =
+      StreamController<MqttTopicMessage>();
 
   MessagingClient(this.hostname, this.port);
 
-  @override
+  /* @override
   void addEventListener(String event, Function(dynamic data) callback) {
     if (null == _client) {
       throw Exception(
@@ -22,7 +26,7 @@ class MessagingClient extends EventEmitter {
       _client!.subscribe(topic, MqttQos.exactlyOnce);
     }
     super.addEventListener(event, callback);
-  }
+  }*/
 
   void send(String topic, String message) {
     if (null == _client) {
@@ -54,8 +58,14 @@ class MessagingClient extends EventEmitter {
       String topic = c[0].topic;
       String raw =
           MqttPublishPayload.bytesToStringAsString(rec.payload.message);
-      emit("message", raw);
-      emit("message:$topic", raw);
+      messageController.add(
+        MqttTopicMessage(
+          topic: topic,
+          message: raw,
+        ),
+      );
+      // emit("message", raw);
+      // emit("message:$topic", raw);
     });
 
     _client = client;

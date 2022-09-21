@@ -93,7 +93,7 @@ class _HomeViewPage extends State<HomeViewPage> {
         "${uid}io/display/state",
         "on",
       );
-      _messagingClient.addEventListener(
+      /*_messagingClient.addEventListener(
         "message:${uid}firebase/notification/token/add",
         (raw) async {
           Map<String, dynamic> message = jsonDecode(raw);
@@ -109,16 +109,14 @@ class _HomeViewPage extends State<HomeViewPage> {
             "token for hash '$hash' set",
           );
         },
-      );
+      ); */
       // init signaling client
       _signalingClient = SignalingClient.fromMessagingClient(
         _messagingClient,
         "${uid}rtc/signaling",
         uid,
       );
-
-      _signalingClient.addEventListener("message", (message) {
-        if (message is! SignalingMessage) return;
+      _signalingClient.messageController.stream.listen((message) {
         switch (message.type) {
           case SignalingMessageType.candidate:
             break;
@@ -144,20 +142,17 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _registerListerners() {
-    _messagingClient.addEventListener(
-      "message:${uid}io/display/state",
-      (data) {
+    _messagingClient.messageController.stream.listen((event) {
+      if (event.topic == "${uid}io/display/state") {
         setState(() {
-          displayState = (data as String) == "on";
+          displayState = event.message == "on";
         });
-      },
-    );
-    _messagingClient.addEventListener(
-      "message:${uid}io/camera/request",
-      (data) async {
-        snapshot = await takePicture();
-      },
-    );
+      } else if (event.topic == "${uid}io/camera/request") {
+        takePicture().then((value) {
+          snapshot = value;
+        });
+      }
+    });
   }
 
   void _onUnlock(String passcode) {
@@ -203,39 +198,42 @@ class _HomeViewPage extends State<HomeViewPage> {
   void createRtcClient(SignalingMessage offerMessage) async {
     Map<String, dynamic> iceServers = config["webrtc"]["ice"];
     MediaRessource mediaRessource = MediaRessource();
-    RtcClient client = RtcClient(_signalingClient, mediaRessource, iceServers);
+    RtcClient client = RtcClient(
+      _signalingClient,
+      mediaRessource,
+      iceServers,
+      onMediatrackReceived: ((mediaStream) {
+        if (_rtcVideoRenderer.srcObject != null) {
+          MediaStream stream = _rtcVideoRenderer.srcObject!;
+          for (MediaStreamTrack audiotrack in mediaStream.getAudioTracks()) {
+            stream.addTrack(audiotrack);
+          }
+          _rtcVideoRenderer.srcObject = stream;
+        } else {
+          _rtcVideoRenderer.srcObject = mediaStream;
+        }
+      }),
+      onStateChanged: ((state, client) {
+        switch (state) {
+          case RtcConnectionState.disconnected:
+            _rtcClients.remove(client);
+            break;
+          default:
+            break;
+        }
+        if (_messagingClient.isConnected()) {
+          _messagingClient.send(
+            "${uid}rtc/call/state",
+            state.toString(),
+          );
+        }
+      }),
+    );
+
     client.recipient = offerMessage.sender;
 
     log("request to start rtc acknowledged for ${client.recipient}, active calls: ${_rtcClients.length}}");
 
-    client.addEventListener("mediatrack-received", (tracks) {
-      tracks as MediaStream;
-      if (_rtcVideoRenderer.srcObject != null) {
-        MediaStream stream = _rtcVideoRenderer.srcObject!;
-        for (MediaStreamTrack audiotrack in tracks.getAudioTracks()) {
-          stream.addTrack(audiotrack);
-        }
-        _rtcVideoRenderer.srcObject = stream;
-      } else {
-        _rtcVideoRenderer.srcObject = tracks;
-      }
-    });
-    client.addEventListener("state-changed", (state) {
-      if (state is! RtcConnectionState) return;
-      switch (state) {
-        case RtcConnectionState.disconnected:
-          _rtcClients.remove(client);
-          break;
-        default:
-          break;
-      }
-      if (_messagingClient.isConnected()) {
-        _messagingClient.send(
-          "${uid}rtc/call/state",
-          state.toString(),
-        );
-      }
-    });
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
     _rtcClients.add(client);

@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:dieklingel_base/event/event_emitter.dart';
 
 import 'signaling_message.dart';
 import '../messaging/messaging_client.dart';
 
-class SignalingClient extends EventEmitter {
+class SignalingClient {
   final MessagingClient _messagingClient;
   final String _signalingTopic;
   final String _uid;
+  final StreamController<SignalingMessage> broadcastController =
+      StreamController<SignalingMessage>();
+  final StreamController<SignalingMessage> messageController =
+      StreamController<SignalingMessage>();
 
   String get uid {
     return _uid;
@@ -18,7 +22,23 @@ class SignalingClient extends EventEmitter {
     this._signalingTopic,
     this._uid,
   ) {
-    _messagingClient.addEventListener("message:$_signalingTopic", (raw) {
+    _messagingClient.messageController.stream.listen((event) {
+      if (_signalingTopic != event.topic) return;
+      try {
+        SignalingMessage message =
+            SignalingMessage.fromJson(jsonDecode(event.message));
+        if ("" == message.recipient) {
+          broadcastController.add(message);
+        } else if (_uid == message.recipient) {
+          messageController.add(message);
+        }
+      } catch (exception) {
+        print(
+          "could not convert the message into a signaling message;$exception",
+        );
+      }
+    });
+    /*_messagingClient.addEventListener("message:$_signalingTopic", (raw) {
       try {
         SignalingMessage message = SignalingMessage.fromJson(jsonDecode(raw));
         if ("" == message.recipient) {
@@ -35,7 +55,7 @@ class SignalingClient extends EventEmitter {
           "could not convert the message into a signaling message;$exception",
         );
       }
-    });
+    });*/
   }
 
   void send(SignalingMessage message) {

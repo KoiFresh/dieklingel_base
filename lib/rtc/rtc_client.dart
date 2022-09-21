@@ -1,7 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'rtc_connection_state.dart';
-import '../event/event_emitter.dart';
 import '../media/media_ressource.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
@@ -21,16 +21,66 @@ class RtcTransceiver {
   }
 }
 
-class RtcClient extends EventEmitter {
+class RtcClient extends ChangeNotifier {
   final SignalingClient _signalingClient;
   final MediaRessource _mediaRessource;
   final Map<String, dynamic> _iceServers;
+  final Function(SignalingMessage offer)? onOfferReceived;
+  final Function(MediaStream mediaStream)? onMediatrackReceived;
+  final Function(RtcConnectionState state, RtcClient client)? onStateChanged;
   String recipient = "";
-  List<RTCIceCandidate> candidates = List.empty(growable: true);
-  RTCPeerConnection? _rtcPeerConnection;
 
-  RtcClient(this._signalingClient, this._mediaRessource, this._iceServers) {
-    _signalingClient.addEventListener("message", (message) {
+  RTCPeerConnection? _rtcPeerConnection;
+  List<RTCIceCandidate> candidates = List.empty(growable: true);
+  RtcConnectionState rtcConnectionState = RtcConnectionState.disconnected;
+
+  RtcClient(
+    this._signalingClient,
+    this._mediaRessource,
+    this._iceServers, {
+    this.onOfferReceived,
+    this.onMediatrackReceived,
+    this.onStateChanged,
+  }) {
+    _signalingClient.messageController.stream.listen((message) {
+      switch (message.type) {
+        case SignalingMessageType.offer:
+          onOfferReceived?.call(message);
+          rtcConnectionState = RtcConnectionState.invited;
+          notifyListeners();
+          break;
+        case SignalingMessageType.answer:
+          _rtcPeerConnection?.setRemoteDescription(
+            RTCSessionDescription(
+              message.data['sdp'],
+              message.data['type'],
+            ),
+          );
+          rtcConnectionState = RtcConnectionState.connecting;
+          notifyListeners();
+          break;
+        case SignalingMessageType.candidate:
+          RTCIceCandidate candidate = RTCIceCandidate(
+            message.data['candidate'],
+            message.data['sdpMid'],
+            message.data['sdpMLineIndex'],
+          );
+          if (_rtcPeerConnection == null) {
+            candidates.add(candidate);
+          }
+          _rtcPeerConnection?.addCandidate(candidate);
+          break;
+        case SignalingMessageType.busy:
+        case SignalingMessageType.leave:
+          rtcConnectionState = RtcConnectionState.disconnected;
+          notifyListeners();
+          abort();
+          break;
+        default:
+          break;
+      }
+    });
+    /*_signalingClient.addEventListener("message", (message) {
       if (message is! SignalingMessage) return;
       switch (message.type) {
         case SignalingMessageType.offer:
@@ -65,7 +115,7 @@ class RtcClient extends EventEmitter {
         default:
           break;
       }
-    });
+    });*/
   }
 
   Future<RTCPeerConnection> _createRtcPeerConnection({
@@ -116,10 +166,12 @@ class RtcClient extends EventEmitter {
   void _onConnectionStateChanged(RTCPeerConnectionState state) {
     switch (state) {
       case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
-        emit("state-changed", RtcConnectionState.connected);
+        rtcConnectionState = RtcConnectionState.connected;
+        notifyListeners();
         break;
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
-        emit("state-changed", RtcConnectionState.disconnected);
+        rtcConnectionState = RtcConnectionState.disconnected;
+        notifyListeners();
         hangup();
         break;
       default:
@@ -129,7 +181,7 @@ class RtcClient extends EventEmitter {
 
   void _onTrackReceived(RTCTrackEvent event) {
     if (event.streams.isEmpty) return;
-    emit("mediatrack-received", event.streams[0]);
+    onMediatrackReceived?.call(event.streams[0]);
   }
 
   Future<void> invite(
@@ -137,7 +189,8 @@ class RtcClient extends EventEmitter {
     Map<String, dynamic> options = const {},
     List<RtcTransceiver> transceivers = const [],
   }) async {
-    emit("state-changed", RtcConnectionState.connecting);
+    rtcConnectionState = RtcConnectionState.connecting;
+    notifyListeners();
     RTCPeerConnection connection = await _createRtcPeerConnection(
       transceivers: transceivers,
     );
@@ -155,7 +208,8 @@ class RtcClient extends EventEmitter {
 
   Future<void> answer(SignalingMessage offer) async {
     if (offer.type != SignalingMessageType.offer) return;
-    emit("state-changed", RtcConnectionState.connecting);
+    rtcConnectionState = RtcConnectionState.connecting;
+    notifyListeners();
     RTCPeerConnection connection = await _createRtcPeerConnection();
     recipient = offer.sender;
     await connection.setRemoteDescription(RTCSessionDescription(
