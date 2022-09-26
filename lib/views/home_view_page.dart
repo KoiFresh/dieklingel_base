@@ -27,6 +27,7 @@ class HomeViewPage extends StatefulWidget {
 
 class _HomeViewPage extends State<HomeViewPage> {
   late final Map<String, dynamic> config = widget.config;
+  final List<UserNotificationSkeleton> userNotifications = [];
 
   bool notifyEnabled = true;
 
@@ -49,6 +50,26 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
+    messagingClient.messageController.stream.listen((event) {
+      if (event.topic != "${messagingClient.prefix}io/user/notification") {
+        return;
+      }
+      Map<String, dynamic> payload = {};
+      try {
+        payload = jsonDecode(event.message);
+      } catch (exception) {
+        payload["body"] = event.message;
+      }
+      payload["key"] = UniqueKey().toString();
+      payload["title"] ??= "";
+      payload["body"] ??= "www.dieklingel.com";
+      payload["ttl"] ??= 15;
+      payload["delay"] ??= 0;
+      appSettings.log = "User Notification Received";
+      setState(() {
+        userNotifications.add(UserNotificationSkeleton.fromJson(payload));
+      });
+    });
   }
 
   void _onUnlock(String passcode) {
@@ -199,24 +220,17 @@ class _HomeViewPage extends State<HomeViewPage> {
                   height: height,
                   onTap: _onScreensaverTap,
                 ),
-          UserNotification(
-            enabled: notifyEnabled,
-            onDismissed: () {
-              setState(() {
-                notifyEnabled = false;
-              });
-              Future.delayed(Duration(seconds: 5), () {
+          Stack(
+              children: List.generate(userNotifications.length, (index) {
+            return UserNotification.fromUserNotificationSkeleton(
+              userNotifications[index],
+              () {
                 setState(() {
-                  notifyEnabled = true;
+                  userNotifications.removeAt(index);
                 });
-                Future.delayed(Duration(seconds: 5), () {
-                  setState(() {
-                    notifyEnabled = false;
-                  });
-                });
-              });
-            },
-          ),
+              },
+            );
+          })),
         ],
       ),
     );

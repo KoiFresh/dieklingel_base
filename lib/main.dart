@@ -178,7 +178,8 @@ class _MyApp extends State<MyApp> {
                   .listen("rtc/signaling")
                   .listen("io/display/state")
                   .listen("firebase/notification/token/add")
-                  .listen("io/camera/request");
+                  .listen("io/camera/request")
+                  .listen("io/user/notification");
             },
           ),
         ),
