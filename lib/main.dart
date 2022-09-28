@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 
+import 'extensions/byte64_converter_xfile.dart';
+
 import 'components/app_settings.dart';
 import 'components/session_handler.dart';
 import 'globals.dart' as app;
@@ -23,7 +25,7 @@ void main() async {
   SignalingClient signalingClient =
       SignalingClient.fromMessagingClient(messagingClient);
   RtcClientsModel rtcClientsModel = RtcClientsModel();
-  AppSettings appSettings = AppSettings.fromMessagingClient(messagingClient);
+  AppSettings appSettings = AppSettings();
 
   runApp(
     MultiProvider(
@@ -78,6 +80,11 @@ class _MyApp extends State<MyApp> {
   void initState() {
     super.initState();
     _rtcVideoRenderer.initialize();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      createMessagingListeners();
+      createAppSettingsListeners();
+    });
+
     signalingClient.messageController.stream.listen((message) {
       switch (message.type) {
         case SignalingMessageType.candidate:
@@ -129,12 +136,64 @@ class _MyApp extends State<MyApp> {
 
     client.recipient = offerMessage.sender;
 
-    appSettings.log =
-        "request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}";
+    appSettings.log(
+      "request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}",
+    );
 
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
     rtcClientsModel.add(client);
+  }
+
+  void createMessagingListeners() {
+    messagingClient.messageController.stream.listen((event) async {
+      switch (event.topic.replaceFirst(messagingClient.prefix, "")) {
+        case "io/camera/trigger":
+          if (event.message == "now") {
+            String snapshot = await (await MediaRessource.getSnapshot())
+                .asB64String(data: "image/png");
+            appSettings.snapshot.value = snapshot;
+          } else if (event.message == "latest") {
+            appSettings.snapshot
+                .setValueAndForceNotify(appSettings.snapshot.value);
+          } else if ((int.tryParse(event.message)) != null) {
+            Duration duration = Duration(seconds: int.parse(event.message));
+            Future.delayed(duration, () async {
+              String snapshot = await (await MediaRessource.getSnapshot())
+                  .asB64String(data: "image/png");
+              appSettings.snapshot.value = snapshot;
+            });
+          }
+          break;
+        case "io/display/state":
+          appSettings.displayIsActive.value = event.message == "on";
+          break;
+      }
+    });
+  }
+
+  void createAppSettingsListeners() {
+    appSettings.lastLog.addListener(() {
+      if (!messagingClient.isConnected()) return;
+      messagingClient.send(
+        "system/log",
+        appSettings.lastLog.value,
+      );
+    });
+    appSettings.snapshot.addListener(() {
+      if (!messagingClient.isConnected()) return;
+      messagingClient.send(
+        "io/camera/snapshot",
+        appSettings.snapshot.value,
+      );
+    });
+    appSettings.displayIsActive.addListener(() {
+      if (!messagingClient.isConnected()) return;
+      messagingClient.send(
+        "io/display/state",
+        appSettings.displayIsActive.value ? "on" : "off",
+      );
+    });
   }
 
   Widget content(BuildContext context) {
@@ -142,7 +201,7 @@ class _MyApp extends State<MyApp> {
       timeout: const Duration(seconds: 10),
       enabled: false,
       onTimeout: () {
-        appSettings.displayIsActive = false;
+        appSettings.displayIsActive.value = false;
       },
       child: MaterialApp(
         scrollBehavior: TouchScrollBehavior(),
@@ -171,14 +230,14 @@ class _MyApp extends State<MyApp> {
                 password: config["mqtt"]["password"],
               );
               String uid = config["uid"] ?? "";
-              appSettings.log = "System started with uid: $uid";
+              appSettings.log("System started with uid: $uid");
               signalingClient.uid = uid;
               signalingClient.signalingTopic = "rtc/signaling";
               messagingClient
                   .listen("rtc/signaling")
                   .listen("io/display/state")
                   .listen("firebase/notification/token/add")
-                  .listen("io/camera/request")
+                  .listen("io/camera/trigger")
                   .listen("io/user/notification");
             },
           ),

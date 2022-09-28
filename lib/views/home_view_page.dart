@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:camera/camera.dart';
+import 'package:dieklingel_base/extensions/byte64_converter_xfile.dart';
+import 'package:dieklingel_base/media/media_ressource.dart';
+import 'package:dieklingel_base/views/awake_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,10 +53,15 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
-    messagingClient.messageController.stream.listen((event) {
-      if (event.topic != "${messagingClient.prefix}io/user/notification") {
-        return;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      initialize();
+    });
+  }
+
+  void initialize() {
+    context.read<MessagingClient>().messageController.stream.listen((event) {
+      String prefix = context.read<MessagingClient>().prefix;
+      if (event.topic != "${prefix}io/user/notification") return;
       Map<String, dynamic> payload = {};
       try {
         payload = jsonDecode(event.message);
@@ -65,32 +73,28 @@ class _HomeViewPage extends State<HomeViewPage> {
       payload["body"] ??= "www.dieklingel.com";
       payload["ttl"] ??= 15;
       payload["delay"] ??= 0;
-      appSettings.log = "User Notification Received";
+      appSettings.log("User Notification Received");
       setState(() {
         userNotifications.add(UserNotificationSkeleton.fromJson(payload));
       });
     });
   }
 
-  void _onUnlock(String passcode) {
-    appSettings.log = "The unlock button was tapped";
-    String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
-    if (!messagingClient.isConnected()) return;
-    messagingClient.send(
-      "io/action/unlock/passcode",
-      passcodeHash,
-    );
-  }
-
   void _onSignTap(String hash) async {
-    appSettings.log = "The Sign with hash '$hash' was tapped";
+    appSettings.log("The Sign with hash '$hash' was tapped");
     List<String>? tokens = app.preferences.getStringList("sign/$hash");
     if (null == tokens) {
-      appSettings.log = "The Sign '$hash' has no tokens";
+      appSettings.log("The Sign '$hash' has no tokens");
       return;
     }
-    String snapshot =
-        config["notification"]["snapshot"] == true ? await takePicture() : "";
+    String snapshot = "";
+    if (config["notification"]["snapshot"] == true) {
+      XFile image = await MediaRessource.getSnapshot();
+      snapshot = await image.asB64String(data: "image/png");
+      if (mounted) {
+        context.read<AppSettings>().snapshot.setValueAndForceNotify(snapshot);
+      }
+    }
     Map<String, dynamic> message = {
       "tokens": tokens,
       "title": "Jemand steht vor deiner Tuer",
@@ -98,88 +102,17 @@ class _HomeViewPage extends State<HomeViewPage> {
       "image": snapshot,
     };
     if (messagingClient.isConnected()) {
+      // TODO: change notification channel
       messagingClient.send(
         "firebase/notification/send",
         jsonEncode(message),
       );
     }
-    appSettings.log = "A Notification for the Sign '$hash' was send";
+    appSettings.log("A Notification for the Sign '$hash' was send");
   }
 
   void _onScreensaverTap() {
-    Provider.of<AppSettings>(context, listen: false).displayIsActive = true;
-  }
-
-  Future<String> takePicture() async {
-    final List<CameraDescription> cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      return "";
-    }
-    final CameraDescription camera = cameras.first;
-    final CameraController controller = CameraController(
-      camera,
-      ResolutionPreset.medium,
-    );
-    await controller.initialize();
-    XFile image = await controller.takePicture();
-    List<int> bytes = await image.readAsBytes();
-    String base64 = base64Encode(bytes);
-    await controller.dispose();
-    return "data:image/png;base64,$base64";
-  }
-
-  Widget _awake(
-    BuildContext context, {
-    required double width,
-    required double height,
-    required List<Sign> signs,
-  }) {
-    width -= 0.5; //
-    return PageView(
-      controller: PageController(
-        viewportFraction: 0.99999, // preload next page
-      ),
-      children: [
-        SizedBox(
-          width: width,
-          child: Signs(signs: signs),
-        ),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment(0.8, 1),
-              colors: <Color>[
-                Color(0xff1f005c),
-                Color(0xff5b0060),
-                Color(0xff870160),
-                Color(0xffac255e),
-                Color(0xffca485c),
-                Color(0xffe16b5c),
-                Color(0xfff39060),
-                Color(0xffffb56b),
-              ], // Gradient from https://learnui.design/tools/gradient-generator.html
-              tileMode: TileMode.mirror,
-            ),
-          ),
-          child: Numpad(
-            width: width,
-            height: height,
-            textStyle: const TextStyle(color: Colors.white),
-            onUnlock: _onUnlock,
-            onLongUnlock: (passcode) {
-              if (passcode != "000000") return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: ((context) => const MenueViewPage()),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    appSettings.displayIsActive.value = true;
   }
 
   @override
@@ -207,9 +140,8 @@ class _HomeViewPage extends State<HomeViewPage> {
     return Scaffold(
       body: Stack(
         children: [
-          Provider.of<AppSettings>(context).displayIsActive
-              ? _awake(
-                  context,
+          context.watch<AppSettings>().displayIsActive.value
+              ? AwakeView(
                   width: width,
                   height: height,
                   signs: signs,
@@ -221,16 +153,22 @@ class _HomeViewPage extends State<HomeViewPage> {
                   onTap: _onScreensaverTap,
                 ),
           Stack(
-              children: List.generate(userNotifications.length, (index) {
-            return UserNotification.fromUserNotificationSkeleton(
-              userNotifications[index],
-              () {
-                setState(() {
-                  userNotifications.removeAt(index);
-                });
+            children: List.generate(
+              userNotifications.length,
+              (index) {
+                return UserNotification.fromUserNotificationSkeleton(
+                  userNotifications[index],
+                  () {
+                    setState(
+                      () {
+                        userNotifications.removeAt(index);
+                      },
+                    );
+                  },
+                );
               },
-            );
-          })),
+            ),
+          ),
         ],
       ),
     );

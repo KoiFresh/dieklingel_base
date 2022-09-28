@@ -23,7 +23,9 @@ class _MenueViewPage extends State<MenueViewPage> {
           children: [
             ElevatedButton(
               onPressed: () {
-                Navigator.popUntil(context, (route) => route.isFirst);
+                //Navigator.popUntil(context, (route) => route.isFirst);
+                Provider.of<AppSettings>(context, listen: false).lastLog.value =
+                    "Hallo";
               },
               child: const Text("foce reload"),
             ),
@@ -34,7 +36,7 @@ class _MenueViewPage extends State<MenueViewPage> {
               "current mqtt state: ${Provider.of<MessagingClient>(context).isConnected()}",
             ),
             Text(
-              "last log: ${Provider.of<AppSettings>(context).log}",
+              "last log: ${Provider.of<AppSettings>(context).lastLog.toString()}",
             )
           ],
         ),

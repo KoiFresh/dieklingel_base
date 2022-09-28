@@ -29,7 +29,7 @@ class UserNotification extends StatefulWidget {
   final String body;
   final Duration timeToLive;
   final Duration delay;
-  final Function()? onDismissed;
+  final void Function()? onDismissed;
 
   UserNotification.fromUserNotificationSkeleton(
     UserNotificationSkeleton skeleton,
