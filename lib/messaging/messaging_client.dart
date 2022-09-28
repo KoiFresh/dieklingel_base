@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'mqtt_message.dart';
@@ -65,7 +66,7 @@ class MessagingClient extends ChangeNotifier {
     MqttClient client = MqttClientFactory.create(hostname, "");
     client.port = port;
     client.keepAlivePeriod = 20;
-    client.disconnectOnNoResponsePeriod = 30;
+    client.disconnectOnNoResponsePeriod = 60;
     client.setProtocolV311();
     client.autoReconnect = true;
     client.onConnected = () {
@@ -86,12 +87,12 @@ class MessagingClient extends ChangeNotifier {
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
       MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
       String topic = c[0].topic;
-      String raw =
-          MqttPublishPayload.bytesToStringAsString(rec.payload.message);
+      List<int> messageAsBytes = rec.payload.message;
+      String message = utf8.decode(messageAsBytes);
       messageController.add(
         MqttTopicMessage(
           topic: topic,
-          message: raw,
+          message: message,
         ),
       );
       // emit("message", raw);

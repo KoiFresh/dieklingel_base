@@ -8,12 +8,8 @@ import 'package:provider/provider.dart';
 
 import 'components/sign.dart';
 import 'components/user_notification.dart';
-import 'menue_view_page.dart';
-import 'numpad_view.dart';
 import 'screensaver_view.dart';
-import 'signs_view.dart';
 import '../components/app_settings.dart';
-import '../crypto/sha2562.dart';
 import '../globals.dart' as app;
 import '../messaging/messaging_client.dart';
 import '../rtc/rtc_clients_model.dart';
@@ -53,34 +49,43 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      initialize();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) {
+        initialize();
+      },
+    );
   }
 
   void initialize() {
-    context.read<MessagingClient>().messageController.stream.listen((event) {
-      String prefix = context.read<MessagingClient>().prefix;
-      if (event.topic != "${prefix}io/user/notification") return;
-      Map<String, dynamic> payload = {};
-      try {
-        payload = jsonDecode(event.message);
-      } catch (exception) {
-        payload["body"] = event.message;
-      }
-      payload["key"] = UniqueKey().toString();
-      payload["title"] ??= "";
-      payload["body"] ??= "www.dieklingel.com";
-      payload["ttl"] ??= 15;
-      payload["delay"] ??= 0;
-      appSettings.log("User Notification Received");
-      setState(() {
-        userNotifications.add(UserNotificationSkeleton.fromJson(payload));
-      });
-    });
+    context.read<MessagingClient>().messageController.stream.listen(
+      (event) {
+        String prefix = context.read<MessagingClient>().prefix;
+        if (event.topic != "${prefix}io/user/notification") return;
+        Map<String, dynamic> payload = {};
+        try {
+          payload = jsonDecode(event.message);
+        } catch (exception) {
+          payload["body"] = event.message;
+        }
+        payload["key"] = UniqueKey().toString();
+        payload["title"] ??= "";
+        payload["body"] ??= "www.dieklingel.com";
+        payload["ttl"] ??= 15;
+        payload["delay"] ??= 0;
+        appSettings.log("User Notification Received");
+        setState(
+          () {
+            userNotifications.add(UserNotificationSkeleton.fromJson(payload));
+          },
+        );
+      },
+    );
   }
 
   void _onSignTap(String hash) async {
+    if (context.read<MessagingClient>().isConnected()) {
+      context.read<MessagingClient>().send("io/action/sign/hash", hash);
+    }
     appSettings.log("The Sign with hash '$hash' was tapped");
     List<String>? tokens = app.preferences.getStringList("sign/$hash");
     if (null == tokens) {
