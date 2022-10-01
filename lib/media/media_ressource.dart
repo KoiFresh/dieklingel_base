@@ -11,9 +11,11 @@ class MediaRessource {
     }
     final CameraController controller = CameraController(
       cameras.first,
-      ResolutionPreset.medium,
+      ResolutionPreset.max,
+      enableAudio: false,
     );
     await controller.initialize();
+    await Future.delayed(const Duration(milliseconds: 200));
     XFile image = await controller.takePicture();
     await controller.dispose();
     return image;

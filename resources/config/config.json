@@ -33,13 +33,13 @@
 		}
 	},
 	"mqtt": {
-		"address": "ws://127.0.0.1",
+		"address": "ws://server.dieklingel.com",
 		"port": 9001,
 		"username": "Kai",
 		"password": "Kai"
 	},
 	"notification": {
-		"snapshot": false
+		"snapshot": true
 	},
 	"viewport": {
 		"clip": {

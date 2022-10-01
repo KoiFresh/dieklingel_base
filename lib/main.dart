@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
@@ -81,6 +83,7 @@ class _MyApp extends State<MyApp> {
     super.initState();
     _rtcVideoRenderer.initialize();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      initialize();
       createMessagingListeners();
       createAppSettingsListeners();
     });
@@ -96,6 +99,21 @@ class _MyApp extends State<MyApp> {
         default:
           break;
       }
+    });
+  }
+
+  void initialize() {
+    String rawSignHashs =
+        app.preferences.getString("dieklingel.signhashs") ?? "{}";
+    Map<String, List<String>> signHashs =
+        Map.castFrom(jsonDecode(rawSignHashs));
+    context.read<AppSettings>().signHashs.replace(signHashs);
+
+    context.read<AppSettings>().signHashs.addListener(() {
+      app.preferences.setString(
+        "dieklingel.signhashs",
+        jsonEncode(context.read<AppSettings>().signHashs.asMap()),
+      );
     });
   }
 
@@ -147,7 +165,7 @@ class _MyApp extends State<MyApp> {
 
   void createMessagingListeners() {
     messagingClient.messageController.stream.listen((event) async {
-      switch (event.topic.replaceFirst(messagingClient.prefix, "")) {
+      switch (event.topic) {
         case "io/camera/trigger":
           if (event.message == "now") {
             String snapshot = await (await MediaRessource.getSnapshot())
@@ -167,6 +185,18 @@ class _MyApp extends State<MyApp> {
           break;
         case "io/display/state":
           appSettings.displayIsActive.value = event.message == "on";
+          break;
+        case "firebase/notification/token/add":
+          Map<String, dynamic> message = jsonDecode(event.message);
+          if (null == message["hash"] || null == message["token"]) return;
+          String hash = message["hash"];
+          String token = message["token"];
+          List<String> hashs =
+              context.read<AppSettings>().signHashs[hash] ?? [];
+          if (!hashs.contains(token)) {
+            hashs.add(token);
+            context.read<AppSettings>().signHashs[hash] = hashs;
+          }
           break;
       }
     });

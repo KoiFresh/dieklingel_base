@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:dieklingel_base/components/app_settings.dart';
-import 'package:dieklingel_base/messaging/messaging_client.dart';
-import 'package:dieklingel_base/views/components/sign.dart';
+import '../components/app_settings.dart';
+import '../messaging/messaging_client.dart';
+import '../views/components/sign.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

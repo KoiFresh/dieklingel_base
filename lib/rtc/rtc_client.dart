@@ -228,6 +228,12 @@ class RtcClient extends ChangeNotifier {
     ));
     RTCSessionDescription answer = await connection.createAnswer();
     await connection.setLocalDescription(answer);
+
+    for (RTCIceCandidate candidate in candidates) {
+      connection.addCandidate(candidate);
+    }
+    candidates.clear();
+
     SignalingMessage message = SignalingMessage();
     message.sender = _signalingClient.uid;
     message.recipient = offer.sender;

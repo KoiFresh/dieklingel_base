@@ -21,7 +21,7 @@ class SignalingClient extends ChangeNotifier {
     this.uid = "",
   }) {
     _messagingClient.messageController.stream.listen((event) {
-      if ("${_messagingClient.prefix}$signalingTopic" != event.topic) return;
+      if (signalingTopic != event.topic) return;
       try {
         SignalingMessage message =
             SignalingMessage.fromJson(jsonDecode(event.message));

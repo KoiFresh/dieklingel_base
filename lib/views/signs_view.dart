@@ -1,4 +1,4 @@
-import 'package:dieklingel_base/views/components/sign.dart';
+import 'components/sign.dart';
 import 'package:flutter/widgets.dart';
 
 class Signs extends StatelessWidget {

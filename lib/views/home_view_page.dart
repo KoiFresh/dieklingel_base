@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:camera/camera.dart';
-import 'package:dieklingel_base/extensions/byte64_converter_xfile.dart';
-import 'package:dieklingel_base/media/media_ressource.dart';
-import 'package:dieklingel_base/views/awake_view.dart';
+import '../extensions/byte64_converter_xfile.dart';
+import '../media/media_ressource.dart';
+import 'awake_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

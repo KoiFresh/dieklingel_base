@@ -87,6 +87,9 @@ class MessagingClient extends ChangeNotifier {
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
       MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
       String topic = c[0].topic;
+      if (topic.startsWith(prefix)) {
+        topic = topic.replaceFirst(prefix, "");
+      }
       List<int> messageAsBytes = rec.payload.message;
       String message = utf8.decode(messageAsBytes);
       messageController.add(
