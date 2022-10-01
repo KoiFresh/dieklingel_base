@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:dieklingel_base/rtc/rtc_client.dart';
+import 'rtc_client.dart';
 import 'package:flutter/material.dart';
 
 class RtcClientsModel extends ChangeNotifier {
