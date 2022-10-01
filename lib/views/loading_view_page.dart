@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:dieklingel_base/views/error_view_page.dart';
-import 'package:dieklingel_base/views/home_view_page.dart';
+import 'error_view_page.dart';
+import 'home_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
