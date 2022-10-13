@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../components/app_settings.dart';
-import '../messaging/messaging_client.dart';
+import '../messaging/mclient.dart';
 import '../rtc/rtc_clients_model.dart';
 
 class MenueViewPage extends StatefulWidget {
@@ -33,7 +33,7 @@ class _MenueViewPage extends State<MenueViewPage> {
               "current RTC's: ${Provider.of<RtcClientsModel>(context).clients.length.toString()}",
             ),
             Text(
-              "current mqtt state: ${Provider.of<MessagingClient>(context).isConnected()}",
+              "current mqtt state: ${Provider.of<MClient>(context).connectionState}",
             ),
             Text(
               "last log: ${Provider.of<AppSettings>(context).lastLog.toString()}",

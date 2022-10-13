@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+
 import '../components/app_settings.dart';
-import '../messaging/messaging_client.dart';
+import '../messaging/mclient.dart';
 import '../views/components/sign.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,11 +29,13 @@ class AwakeView extends StatelessWidget {
   void _onUnlock(BuildContext context, String passcode) {
     context.read<AppSettings>().log("The unlock button was tapped");
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
-    if (!context.read<MessagingClient>().isConnected()) return;
-    context.read<MessagingClient>().send(
-          "io/action/unlock/passcode",
-          passcodeHash,
-        );
+    if (context.read<MClient>().connectionState !=
+        MqttConnectionState.connected) return;
+    MClientTopicMessage message = MClientTopicMessage(
+      topic: "io/action/unlock/passcode",
+      message: passcodeHash,
+    );
+    context.read<MClient>().publish(message);
   }
 
   @override

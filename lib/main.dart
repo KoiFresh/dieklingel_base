@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
@@ -27,8 +28,6 @@ void main() async {
   SignalingClient signalingClient =
       SignalingClient.fromMessagingClient(messagingClient);
   RtcClientsModel rtcClientsModel = RtcClientsModel();
-  AppSettings appSettings = AppSettings();
-
   runApp(
     MultiProvider(
       providers: [
@@ -42,7 +41,10 @@ void main() async {
           create: ((context) => rtcClientsModel),
         ),
         ChangeNotifierProvider(
-          create: ((context) => appSettings),
+          create: (context) => AppSettings(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => EventMonitor(),
         ),
       ],
       child: const MyApp(),
@@ -105,8 +107,14 @@ class _MyApp extends State<MyApp> {
   void initialize() {
     String rawSignHashs =
         app.preferences.getString("dieklingel.signhashs") ?? "{}";
-    Map<String, List<String>> signHashs =
-        Map.castFrom(jsonDecode(rawSignHashs));
+    //String rawSignHashs = "{}";
+    Map<String, dynamic> json = jsonDecode(rawSignHashs);
+    Map<String, List<String>> signHashs = <String, List<String>>{};
+    json.forEach((key, value) {
+      List<String> list = List.castFrom(value);
+      signHashs[key] = list;
+    });
+
     context.read<AppSettings>().signHashs.replace(signHashs);
 
     context.read<AppSettings>().signHashs.addListener(() {

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:camera/camera.dart';
+import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import '../extensions/byte64_converter_xfile.dart';
 import '../media/media_ressource.dart';
+import '../messaging/mclient.dart';
 import 'awake_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +13,6 @@ import 'components/sign.dart';
 import 'components/user_notification.dart';
 import 'screensaver_view.dart';
 import '../components/app_settings.dart';
-import '../globals.dart' as app;
-import '../messaging/messaging_client.dart';
 import '../rtc/rtc_clients_model.dart';
 import '../signaling/signaling_client.dart';
 
@@ -30,8 +31,8 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   bool notifyEnabled = true;
 
-  MessagingClient get messagingClient {
-    return Provider.of<MessagingClient>(context, listen: false);
+  MClient get messagingClient {
+    return Provider.of<MClient>(context, listen: false);
   }
 
   SignalingClient get signalingClient {
@@ -57,37 +58,39 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void initialize() {
-    context.read<MessagingClient>().messageController.stream.listen(
-      (event) {
-        String prefix = context.read<MessagingClient>().prefix;
-        if (event.topic != "${prefix}io/user/notification") return;
-        Map<String, dynamic> payload = {};
-        try {
-          payload = jsonDecode(event.message);
-        } catch (exception) {
-          payload["body"] = event.message;
-        }
-        payload["key"] = UniqueKey().toString();
-        payload["title"] ??= "";
-        payload["body"] ??= "www.dieklingel.com";
-        payload["ttl"] ??= 15;
-        payload["delay"] ??= 0;
-        appSettings.log("User Notification Received");
-        setState(
-          () {
-            userNotifications.add(UserNotificationSkeleton.fromJson(payload));
-          },
-        );
-      },
-    );
+    context.read<MClient>().subscribe("io/user/notification", (event) {
+      Map<String, dynamic> payload = {};
+      try {
+        payload = jsonDecode(event.message);
+      } catch (exception) {
+        payload["body"] = event.message;
+      }
+      payload["key"] = UniqueKey().toString();
+      payload["title"] ??= "";
+      payload["body"] ??= "www.dieklingel.com";
+      payload["ttl"] ??= 15;
+      payload["delay"] ??= 0;
+      appSettings.log("User Notification Received");
+      setState(
+        () {
+          userNotifications.add(UserNotificationSkeleton.fromJson(payload));
+        },
+      );
+    });
   }
 
   void _onSignTap(String hash) async {
-    if (context.read<MessagingClient>().isConnected()) {
-      context.read<MessagingClient>().send("io/action/sign/hash", hash);
+    if (context.read<MClient>().connectionState ==
+        MqttConnectionState.connected) {
+      context.read<MClient>().publish(
+            MClientTopicMessage(
+              topic: "io/action/sign/hash",
+              message: hash,
+            ),
+          );
     }
     appSettings.log("The Sign with hash '$hash' was tapped");
-    List<String>? tokens = app.preferences.getStringList("sign/$hash");
+    List<String>? tokens = context.read<AppSettings>().signHashs[hash];
     if (null == tokens) {
       appSettings.log("The Sign '$hash' has no tokens");
       return;
@@ -106,12 +109,13 @@ class _HomeViewPage extends State<HomeViewPage> {
       "body": "https://dieklingel.com/",
       "image": snapshot,
     };
-    if (messagingClient.isConnected()) {
+    if (messagingClient.connectionState == MqttConnectionState.connected) {
       // TODO: change notification channel
-      messagingClient.send(
-        "firebase/notification/send",
-        jsonEncode(message),
+      MClientTopicMessage fcmMessage = MClientTopicMessage(
+        topic: "firebase/notification/send",
+        message: jsonEncode(message),
       );
+      messagingClient.publish(fcmMessage);
     }
     appSettings.log("A Notification for the Sign '$hash' was send");
   }
