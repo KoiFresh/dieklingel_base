@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:dieklingel_base/event/event_monitor.dart';
+import 'package:dieklingel_base/event/system_event.dart';
+import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
@@ -28,6 +31,13 @@ class AwakeView extends StatelessWidget {
 
   void _onUnlock(BuildContext context, String passcode) {
     context.read<AppSettings>().log("The unlock button was tapped");
+
+    SystemEvent unlockEvent = SystemEvent(
+      type: SystemEventType.text,
+      payload: "Someone enterd a passcode.",
+    );
+    context.read<EventMonitor>().add(unlockEvent);
+
     String passcodeHash = sha2562.convert(utf8.encode(passcode)).toString();
     if (context.read<MClient>().connectionState !=
         MqttConnectionState.connected) return;

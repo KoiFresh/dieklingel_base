@@ -112,6 +112,7 @@ class MClient extends ChangeNotifier {
     MClientSubscribtion subscribtion =
         MClientSubscribtion(topic, listener: listener, regExp: regExp);
     _subscribtions.add(subscribtion);
+    if (isNotConnected()) return subscribtion;
     _mqttClient?.subscribe("$prefix$topic", MqttQos.exactlyOnce);
     return subscribtion;
   }

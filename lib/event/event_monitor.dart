@@ -1,6 +1,4 @@
-import 'dart:collection';
-
-import 'package:dieklingel_base/event/system_event.dart';
+import 'system_event.dart';
 import 'package:flutter/material.dart';
 
 const int maxCachedEvents = 30;
@@ -9,7 +7,7 @@ class EventMonitor extends ChangeNotifier {
   final List<SystemEvent> _events = [];
 
   List<SystemEvent> get events {
-    return UnmodifiableListView(_events);
+    return _events.toList(growable: false);
   }
 
   void add(SystemEvent event) {

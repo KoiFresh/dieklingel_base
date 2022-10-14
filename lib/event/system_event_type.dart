@@ -15,4 +15,9 @@ enum SystemEventType {
     }
     return SystemEventType.text;
   }
+
+  @override
+  String toString() {
+    return type;
+  }
 }
