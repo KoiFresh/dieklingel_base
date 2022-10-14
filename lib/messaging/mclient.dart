@@ -25,6 +25,14 @@ class MClient extends ChangeNotifier {
         MqttConnectionState.disconnected;
   }
 
+  bool isConnected() {
+    return connectionState == MqttConnectionState.connected;
+  }
+
+  bool isNotConnected() {
+    return !isConnected();
+  }
+
   Future<MqttClientConnectionStatus?> connect({
     String? username,
     String? password,
