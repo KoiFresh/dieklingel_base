@@ -75,6 +75,11 @@ class _HomeViewPage extends State<HomeViewPage> {
           userNotifications.add(UserNotificationSkeleton.fromJson(payload));
         },
       );
+      SystemEvent systemEvent = SystemEvent(
+        type: SystemEventType.notification,
+        payload: event.message,
+      );
+      context.read<EventMonitor>().add(systemEvent);
     });
   }
 
@@ -97,7 +102,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     List<String>? tokens = context.read<AppSettings>().signHashs[hash];
     if (null == tokens) {
       appSettings.log("The Sign '$hash' has no tokens");
-      return;
+      // return;
     }
     String snapshot = "";
     if (config["notification"]["snapshot"] == true) {
@@ -113,6 +118,13 @@ class _HomeViewPage extends State<HomeViewPage> {
       "body": "https://dieklingel.com/",
       "image": snapshot,
     };
+    if (!mounted) return;
+    context.read<EventMonitor>().add(
+          SystemEvent(
+            type: SystemEventType.image,
+            payload: snapshot,
+          ),
+        );
     if (messagingClient.connectionState == MqttConnectionState.connected) {
       // TODO: change notification channel
       MClientTopicMessage fcmMessage = MClientTopicMessage(

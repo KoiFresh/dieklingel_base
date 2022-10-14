@@ -1,7 +1,7 @@
 import 'system_event.dart';
 import 'package:flutter/material.dart';
 
-const int maxCachedEvents = 30;
+const int maxCachedEvents = 10;
 
 class EventMonitor extends ChangeNotifier {
   final List<SystemEvent> _events = [];
