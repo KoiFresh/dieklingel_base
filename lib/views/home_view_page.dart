@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:camera/camera.dart';
+import 'package:dieklingel_base/event/event_monitor.dart';
+import 'package:dieklingel_base/event/system_event.dart';
+import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import '../extensions/byte64_converter_xfile.dart';
@@ -50,11 +53,7 @@ class _HomeViewPage extends State<HomeViewPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (timeStamp) {
-        initialize();
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) => initialize());
   }
 
   void initialize() {
@@ -80,14 +79,19 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _onSignTap(String hash) async {
-    if (context.read<MClient>().connectionState ==
-        MqttConnectionState.connected) {
-      context.read<MClient>().publish(
-            MClientTopicMessage(
-              topic: "io/action/sign/hash",
-              message: hash,
-            ),
-          );
+    SystemEvent signClickedEvent = SystemEvent(
+      type: SystemEventType.text,
+      payload: "The Sign with the hash '$hash' has been clicked.",
+    );
+    context.read<EventMonitor>().add(signClickedEvent);
+
+    MClient mClient = context.read<MClient>();
+    if (mClient.connectionState == MqttConnectionState.connected) {
+      MClientTopicMessage message = MClientTopicMessage(
+        topic: "io/action/sign/hash",
+        message: hash,
+      );
+      mClient.publish(message);
     }
     appSettings.log("The Sign with hash '$hash' was tapped");
     List<String>? tokens = context.read<AppSettings>().signHashs[hash];

@@ -8,7 +8,7 @@ const int maxCachedEvents = 30;
 class EventMonitor extends ChangeNotifier {
   final List<SystemEvent> _events = [];
 
-  List<SystemEvent> get event {
+  List<SystemEvent> get events {
     return UnmodifiableListView(_events);
   }
 

@@ -1,17 +1,18 @@
 import 'dart:convert';
 
 import 'package:dieklingel_base/event/event_monitor.dart';
+import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
+import 'package:dieklingel_base/register_listeners.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
-
-import 'extensions/byte64_converter_xfile.dart';
 
 import 'components/app_settings.dart';
 import 'components/session_handler.dart';
 import 'globals.dart' as app;
 import 'media/media_ressource.dart';
-import 'messaging/messaging_client.dart';
+import 'messaging/mclient.dart';
 import 'rtc/rtc_client.dart';
 import 'rtc/rtc_clients_model.dart';
 import 'rtc/rtc_connection_state.dart';
@@ -24,15 +25,17 @@ import 'views/loading_view_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await app.init();
-  MessagingClient messagingClient = MessagingClient();
-  SignalingClient signalingClient =
-      SignalingClient.fromMessagingClient(messagingClient);
+  MClient mClient = MClient();
+  SignalingClient signalingClient = SignalingClient.fromMessagingClient(
+    mClient,
+    signalingTopic: "rtc/signaling",
+  );
   RtcClientsModel rtcClientsModel = RtcClientsModel();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: ((context) => messagingClient),
+          create: ((context) => mClient),
         ),
         ChangeNotifierProvider(
           create: ((context) => signalingClient),
@@ -64,10 +67,6 @@ class _MyApp extends State<MyApp> {
   final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
   late final Map<String, dynamic> config;
 
-  MessagingClient get messagingClient {
-    return Provider.of<MessagingClient>(context, listen: false);
-  }
-
   SignalingClient get signalingClient {
     return Provider.of<SignalingClient>(context, listen: false);
   }
@@ -86,8 +85,6 @@ class _MyApp extends State<MyApp> {
     _rtcVideoRenderer.initialize();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       initialize();
-      createMessagingListeners();
-      createAppSettingsListeners();
     });
 
     signalingClient.messageController.stream.listen((message) {
@@ -105,9 +102,14 @@ class _MyApp extends State<MyApp> {
   }
 
   void initialize() {
+    registerListeners(
+      mClient: context.read<MClient>(),
+      eventMonitor: context.read<EventMonitor>(),
+      appSettings: context.read<AppSettings>(),
+    );
+
     String rawSignHashs =
         app.preferences.getString("dieklingel.signhashs") ?? "{}";
-    //String rawSignHashs = "{}";
     Map<String, dynamic> json = jsonDecode(rawSignHashs);
     Map<String, List<String>> signHashs = <String, List<String>>{};
     json.forEach((key, value) {
@@ -151,11 +153,13 @@ class _MyApp extends State<MyApp> {
           default:
             break;
         }
-        if (messagingClient.isConnected()) {
-          messagingClient.send(
-            "rtc/call/state",
-            state.toString(),
+        if (context.read<MClient>().connectionState ==
+            MqttConnectionState.connected) {
+          MClientTopicMessage message = MClientTopicMessage(
+            topic: "rtc/call/state",
+            message: state.toString(),
           );
+          context.read<MClient>().publish(message);
         }
       }),
     );
@@ -169,69 +173,6 @@ class _MyApp extends State<MyApp> {
     await mediaRessource.open(true, true);
     client.answer(offerMessage);
     rtcClientsModel.add(client);
-  }
-
-  void createMessagingListeners() {
-    messagingClient.messageController.stream.listen((event) async {
-      switch (event.topic) {
-        case "io/camera/trigger":
-          if (event.message == "now") {
-            String snapshot = await (await MediaRessource.getSnapshot())
-                .asB64String(data: "image/png");
-            appSettings.snapshot.value = snapshot;
-          } else if (event.message == "latest") {
-            appSettings.snapshot
-                .setValueAndForceNotify(appSettings.snapshot.value);
-          } else if ((int.tryParse(event.message)) != null) {
-            Duration duration = Duration(seconds: int.parse(event.message));
-            Future.delayed(duration, () async {
-              String snapshot = await (await MediaRessource.getSnapshot())
-                  .asB64String(data: "image/png");
-              appSettings.snapshot.value = snapshot;
-            });
-          }
-          break;
-        case "io/display/state":
-          appSettings.displayIsActive.value = event.message == "on";
-          break;
-        case "firebase/notification/token/add":
-          Map<String, dynamic> message = jsonDecode(event.message);
-          if (null == message["hash"] || null == message["token"]) return;
-          String hash = message["hash"];
-          String token = message["token"];
-          List<String> hashs =
-              context.read<AppSettings>().signHashs[hash] ?? [];
-          if (!hashs.contains(token)) {
-            hashs.add(token);
-            context.read<AppSettings>().signHashs[hash] = hashs;
-          }
-          break;
-      }
-    });
-  }
-
-  void createAppSettingsListeners() {
-    appSettings.lastLog.addListener(() {
-      if (!messagingClient.isConnected()) return;
-      messagingClient.send(
-        "system/log",
-        appSettings.lastLog.value,
-      );
-    });
-    appSettings.snapshot.addListener(() {
-      if (!messagingClient.isConnected()) return;
-      messagingClient.send(
-        "io/camera/snapshot",
-        appSettings.snapshot.value,
-      );
-    });
-    appSettings.displayIsActive.addListener(() {
-      if (!messagingClient.isConnected()) return;
-      messagingClient.send(
-        "io/display/state",
-        appSettings.displayIsActive.value ? "on" : "off",
-      );
-    });
   }
 
   Widget content(BuildContext context) {
@@ -256,14 +197,12 @@ class _MyApp extends State<MyApp> {
               setState(() {
                 geometry = insets;
               });
-              MessagingClient messagingClient =
-                  Provider.of<MessagingClient>(context, listen: false);
-              SignalingClient signalingClient =
-                  Provider.of<SignalingClient>(context, listen: false);
-              messagingClient.hostname = config["mqtt"]["address"] as String;
-              messagingClient.port = config["mqtt"]["port"] as int;
-              messagingClient.prefix = config["uid"] ?? "";
-              await messagingClient.connect(
+              MClient mClient = context.read<MClient>();
+              SignalingClient signalingClient = context.read<SignalingClient>();
+              mClient.host = config["mqtt"]["address"] as String;
+              mClient.port = config["mqtt"]["port"] as int;
+              mClient.prefix = config["uid"] ?? "";
+              await mClient.connect(
                 username: config["mqtt"]["username"],
                 password: config["mqtt"]["password"],
               );
@@ -271,12 +210,6 @@ class _MyApp extends State<MyApp> {
               appSettings.log("System started with uid: $uid");
               signalingClient.uid = uid;
               signalingClient.signalingTopic = "rtc/signaling";
-              messagingClient
-                  .listen("rtc/signaling")
-                  .listen("io/display/state")
-                  .listen("firebase/notification/token/add")
-                  .listen("io/camera/trigger")
-                  .listen("io/user/notification");
             },
           ),
         ),
