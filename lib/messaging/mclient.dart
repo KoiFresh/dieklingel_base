@@ -95,7 +95,7 @@ class MClient extends ChangeNotifier {
       throw "the mqtt client has to be connected, before publish";
     }
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
-    builder.addString(message.message);
+    builder.addUTF8String(message.message);
     _mqttClient!.publishMessage(
       "$prefix${message.topic}",
       MqttQos.exactlyOnce,

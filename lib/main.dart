@@ -8,11 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
-
-import 'package:objectdb/objectdb.dart';
-// ignore: implementation_imports
-import 'package:objectdb/src/objectdb_storage_indexeddb.dart';
-
 import 'components/app_settings.dart';
 import 'components/session_handler.dart';
 import 'globals.dart' as app;

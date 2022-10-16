@@ -7,8 +7,6 @@ import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:objectdb/objectdb.dart';
-// ignore: implementation_imports
-import 'package:objectdb/src/objectdb_storage_indexeddb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
@@ -62,28 +60,24 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   void initialize() {
     context.read<MClient>().subscribe("io/user/notification", (event) {
-      Map<String, dynamic> payload = {};
-      try {
-        payload = jsonDecode(event.message);
-      } catch (exception) {
-        payload["body"] = event.message;
-      }
-      payload["key"] = UniqueKey().toString();
-      payload["title"] ??= "";
-      payload["body"] ??= "www.dieklingel.com";
-      payload["ttl"] ??= 15;
-      payload["delay"] ??= 0;
-      appSettings.log("User Notification Received");
-      setState(
-        () {
-          userNotifications.add(UserNotificationSkeleton.fromJson(payload));
+      UserNotificationSkeleton skeleton = UserNotificationSkeleton.fromJson(
+        {
+          "key": UniqueKey().toString(),
+          "title": "",
+          "body": event.message,
+          "ttl": 15,
+          "delay": 0,
         },
       );
-      SystemEvent systemEvent = SystemEvent(
+      setState(() {
+        userNotifications.add(skeleton);
+      });
+
+      SystemEvent even = SystemEvent(
         type: SystemEventType.notification,
         payload: event.message,
       );
-      context.read<EventMonitor>().add(systemEvent);
+      context.read<EventMonitor>().add(even);
     });
   }
 
@@ -141,7 +135,7 @@ class _HomeViewPage extends State<HomeViewPage> {
 
     // publish picture event
     SystemEvent imageEvent = SystemEvent(
-      type: SystemEventType.notification,
+      type: SystemEventType.image,
       payload: snapshot,
     );
     monitor.add(imageEvent);
