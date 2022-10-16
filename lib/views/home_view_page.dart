@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dieklingel_base/database/objectdb_factory.dart';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
 import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:objectdb/objectdb.dart';
+// ignore: implementation_imports
+import 'package:objectdb/src/objectdb_storage_indexeddb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
@@ -83,16 +87,24 @@ class _HomeViewPage extends State<HomeViewPage> {
     });
   }
 
-  void _onSignTap(String hash) async {
+  void _onSignTap(String id) async {
     EventMonitor monitor = context.read<EventMonitor>();
     MediaRessource mediaRessource = MediaRessource();
     MClient mClient = context.read<MClient>();
 
     // publish sign information
     if (mClient.isConnected()) {
+      List<dynamic> payloads = [];
+
+      ObjectDB database = ObjectDBFactory.get();
+      List<JSON> docs = await database.find({"id": id});
+      for (var element in docs) {
+        payloads.add(element["payload"]);
+      }
+
       Map<String, dynamic> payload = {
-        "hash": hash,
-        "payload": [],
+        "id": id,
+        "payload": payloads,
       };
 
       MClientTopicMessage message = MClientTopicMessage(
@@ -105,7 +117,7 @@ class _HomeViewPage extends State<HomeViewPage> {
     // publish clicked events
     SystemEvent clickedEvent = SystemEvent(
       type: SystemEventType.text,
-      payload: "The Sign with the hash '$hash' has been clicked.",
+      payload: "The Sign with the hash '$id' has been clicked.",
     );
     monitor.add(clickedEvent);
 

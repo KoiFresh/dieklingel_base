@@ -6,9 +6,9 @@ import '../messaging/mclient_subscribtion.dart';
 import '../messaging/mclient_topic_message.dart';
 
 extension Get on MClient {
-  void listen(String topic, String Function(String message) executer) {
-    subscribe("$topic/+", (message) {
-      String returnVal = executer(message.message);
+  void listen(String topic, Future<String> Function(String message) executer) {
+    subscribe("$topic/+", (message) async {
+      String returnVal = await executer(message.message);
       publish(
         MClientTopicMessage(
           topic: "${message.topic}/response",

@@ -2,26 +2,61 @@ import 'dart:convert';
 
 import 'package:dieklingel_base/components/app_settings.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:objectdb/objectdb.dart';
 
 import 'event/event_monitor.dart';
 import 'extensions/get_mclient.dart';
 import 'messaging/mclient.dart';
 import 'messaging/mclient_topic_message.dart';
 
+typedef JSON = Map<dynamic, dynamic>;
+
 void registerListeners({
   required MClient mClient,
   required EventMonitor eventMonitor,
   required AppSettings appSettings,
+  required ObjectDB databse,
 }) {
-  /// listen for request to all system events
+  Future(() async {});
+
+  // listen for request to all system events
   mClient.listen(
     "request/events",
-    (message) => jsonEncode(eventMonitor.events),
+    (message) async => jsonEncode(eventMonitor.events),
   );
 
   mClient.listen(
     "request/ping",
-    (message) => "pong",
+    (message) async => "pong",
+  );
+
+  mClient.listen(
+    "request/register",
+    (message) async {
+      JSON json = jsonDecode(message);
+      if (json["hash"] == null || json["hash"] == "") {
+        return "ERROR";
+      }
+      int updated = await databse.update(
+        {
+          "hash": json["hash"],
+          "payload": json["payload"],
+        },
+        {
+          "timestamp": DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+      if (updated < 1) {
+        await databse.insert(
+          {
+            "hash": json["hash"],
+            "payload": json["hash"],
+            "timestamp": DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      }
+      return "OK";
+    },
   );
 
   /// listen for system events to publish

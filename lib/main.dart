@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dieklingel_base/database/objectdb_factory.dart';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:dieklingel_base/register_listeners.dart';
@@ -7,6 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
+
+import 'package:objectdb/objectdb.dart';
+// ignore: implementation_imports
+import 'package:objectdb/src/objectdb_storage_indexeddb.dart';
 
 import 'components/app_settings.dart';
 import 'components/session_handler.dart';
@@ -106,6 +111,7 @@ class _MyApp extends State<MyApp> {
       mClient: context.read<MClient>(),
       eventMonitor: context.read<EventMonitor>(),
       appSettings: context.read<AppSettings>(),
+      databse: ObjectDBFactory.get(),
     );
 
     String rawSignHashs =
