@@ -1,26 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:camera/camera.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class MediaRessource {
-  static Future<XFile> getSnapshot() async {
-    final List<CameraDescription> cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      return XFile.fromData(Uint8List(0));
-    }
-    final CameraController controller = CameraController(
-      cameras.first,
-      ResolutionPreset.max,
-      enableAudio: false,
-    );
-    await controller.initialize();
-    await Future.delayed(const Duration(milliseconds: 200));
-    XFile image = await controller.takePicture();
-    await controller.dispose();
-    return image;
-  }
-
   MediaStream? _stream;
 
   MediaStream? get stream {

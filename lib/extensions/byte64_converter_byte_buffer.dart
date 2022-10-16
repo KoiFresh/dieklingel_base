@@ -1,10 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
-import 'package:camera/camera.dart';
-
-extension Converter on XFile {
+extension Converter on ByteBuffer {
   Future<String> asB64String({String data = ""}) async {
-    List<int> bytes = await readAsBytes();
+    List<int> bytes = asUint8List();
     String base64 = base64Encode(bytes);
     if (data.isEmpty) {
       return base64;

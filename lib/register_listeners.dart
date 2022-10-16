@@ -19,6 +19,11 @@ void registerListeners({
     (message) => jsonEncode(eventMonitor.events),
   );
 
+  mClient.listen(
+    "request/ping",
+    (message) => "pong",
+  );
+
   /// listen for system events to publish
   eventMonitor.addListener(() {
     if (mClient.connectionState != MqttConnectionState.connected) return;

@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:camera/camera.dart';
+import 'dart:typed_data';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
 import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
-import 'package:mqtt_client/mqtt_client.dart';
-import '../extensions/byte64_converter_xfile.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
 import 'awake_view.dart';
@@ -84,56 +84,55 @@ class _HomeViewPage extends State<HomeViewPage> {
   }
 
   void _onSignTap(String hash) async {
-    SystemEvent signClickedEvent = SystemEvent(
-      type: SystemEventType.text,
-      payload: "The Sign with the hash '$hash' has been clicked.",
-    );
-    context.read<EventMonitor>().add(signClickedEvent);
-
+    EventMonitor monitor = context.read<EventMonitor>();
+    MediaRessource mediaRessource = MediaRessource();
     MClient mClient = context.read<MClient>();
-    if (mClient.connectionState == MqttConnectionState.connected) {
+
+    // publish sign information
+    if (mClient.isConnected()) {
+      Map<String, dynamic> payload = {
+        "hash": hash,
+        "payload": [],
+      };
+
       MClientTopicMessage message = MClientTopicMessage(
-        topic: "io/action/sign/hash",
-        message: hash,
+        topic: "io/action/sign/clicked",
+        message: jsonEncode(payload),
       );
       mClient.publish(message);
     }
-    appSettings.log("The Sign with hash '$hash' was tapped");
-    List<String>? tokens = context.read<AppSettings>().signHashs[hash];
-    if (null == tokens) {
-      appSettings.log("The Sign '$hash' has no tokens");
-      // return;
-    }
-    String snapshot = "";
-    if (config["notification"]["snapshot"] == true) {
-      XFile image = await MediaRessource.getSnapshot();
-      snapshot = await image.asB64String(data: "image/png");
-      if (mounted) {
-        context.read<AppSettings>().snapshot.setValueAndForceNotify(snapshot);
-      }
-    }
-    Map<String, dynamic> message = {
-      "tokens": tokens,
-      "title": "Jemand steht vor deiner Tuer",
-      "body": "https://dieklingel.com/",
-      "image": snapshot,
-    };
-    if (!mounted) return;
-    context.read<EventMonitor>().add(
-          SystemEvent(
-            type: SystemEventType.image,
-            payload: snapshot,
-          ),
-        );
-    if (messagingClient.connectionState == MqttConnectionState.connected) {
-      // TODO: change notification channel
-      MClientTopicMessage fcmMessage = MClientTopicMessage(
-        topic: "firebase/notification/send",
-        message: jsonEncode(message),
+
+    // publish clicked events
+    SystemEvent clickedEvent = SystemEvent(
+      type: SystemEventType.text,
+      payload: "The Sign with the hash '$hash' has been clicked.",
+    );
+    monitor.add(clickedEvent);
+
+    // take picture
+    MediaStream? stream = await mediaRessource.open(false, true);
+    if (null == stream) {
+      SystemEvent event = SystemEvent(
+        type: SystemEventType.warning,
+        payload: "could not open camera for snapshot",
       );
-      messagingClient.publish(fcmMessage);
+      monitor.add(event);
+      return;
     }
-    appSettings.log("A Notification for the Sign '$hash' was send");
+
+    await Future.delayed(const Duration(seconds: 1)); // cooldown for lightning
+    MediaStreamTrack? track = stream.getVideoTracks().first;
+
+    ByteBuffer buffer = await track.captureFrame();
+    mediaRessource.close();
+    String snapshot = await buffer.asB64String(data: "image/png");
+
+    // publish picture event
+    SystemEvent imageEvent = SystemEvent(
+      type: SystemEventType.notification,
+      payload: snapshot,
+    );
+    monitor.add(imageEvent);
   }
 
   void _onScreensaverTap() {

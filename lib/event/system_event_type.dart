@@ -1,7 +1,8 @@
 enum SystemEventType {
   image("image"),
   text("text"),
-  notification("notification");
+  notification("notification"),
+  warning("warning");
 
   final String type;
   const SystemEventType(this.type);
@@ -12,6 +13,8 @@ enum SystemEventType {
         return SystemEventType.image;
       case "notification":
         return SystemEventType.notification;
+      case "warning":
+        return SystemEventType.warning;
     }
     return SystemEventType.text;
   }

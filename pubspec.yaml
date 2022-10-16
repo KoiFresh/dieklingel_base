@@ -38,7 +38,6 @@ dependencies:
   # audioplayers: ^1.0.1
   shared_preferences: ^2.0.15
   http: ^0.13.4
-  camera: ^0.10.0+1
   flutter_html: ^3.0.0-alpha.3
   synchronized: ^3.0.0+2
   numberpicker: ^2.1.1
