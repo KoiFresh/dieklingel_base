@@ -7,11 +7,11 @@ import '../messaging/mclient_topic_message.dart';
 
 extension Get on MClient {
   void listen(String topic, Future<String> Function(String message) executer) {
-    subscribe("$topic/+", (message) async {
+    subscribe("$topic+", (message) async {
       String returnVal = await executer(message.message);
       publish(
         MClientTopicMessage(
-          topic: "${message.topic}/response",
+          topic: "${message.topic}response",
           message: returnVal,
         ),
       );
@@ -26,12 +26,12 @@ extension Get on MClient {
     Completer<String?> completer = Completer<String?>();
     String identifier = const Uuid().v4();
     MClientSubscribtion sub =
-        subscribe("$topic/$identifier/response", (message) {
+        subscribe("$topic$identifier/response", (message) {
       completer.complete(message.message);
     });
     publish(
       MClientTopicMessage(
-        topic: "$topic/$identifier",
+        topic: "$topic$identifier",
         message: request,
       ),
     );

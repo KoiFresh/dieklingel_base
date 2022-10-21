@@ -33,6 +33,7 @@
 		}
 	},
 	"mqtt": {
+		"uri": "ws://server.dieklingel.com:9001/com.dieklingel/mayer/kai/",
 		"address": "ws://server.dieklingel.com",
 		"port": 9001,
 		"username": "Kai",

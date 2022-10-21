@@ -26,11 +26,8 @@ class SignalingClient extends ChangeNotifier {
       try {
         SignalingMessage message =
             SignalingMessage.fromJson(jsonDecode(event.message));
-        if ("" == message.recipient) {
-          broadcastController.add(message);
-        } else if (uid == message.recipient) {
-          messageController.add(message);
-        }
+
+        messageController.add(message);
       } catch (exception) {
         print(
           "could not convert the message into a signaling message;$exception",

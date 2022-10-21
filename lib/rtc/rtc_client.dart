@@ -166,8 +166,8 @@ class RtcClient extends ChangeNotifier {
   void _onNewIceCandidateFound(RTCIceCandidate candidate) {
     if (null == _rtcPeerConnection) return;
     SignalingMessage message = SignalingMessage();
-    message.sender = _signalingClient.uid;
-    message.recipient = recipient;
+    //message.sender = _signalingClient.uid;
+    //message.recipient = recipient;
     message.type = SignalingMessageType.candidate;
     message.data = candidate.toMap();
     _signalingClient.send(message);
@@ -208,8 +208,8 @@ class RtcClient extends ChangeNotifier {
     RTCSessionDescription offer = await connection.createOffer(options);
     await connection.setLocalDescription(offer);
     SignalingMessage message = SignalingMessage();
-    message.recipient = other;
-    message.sender = _signalingClient.uid;
+    //message.recipient = other;
+    //message.sender = _signalingClient.uid;
     message.type = SignalingMessageType.offer;
     message.data = offer.toMap();
     _rtcPeerConnection = connection;
@@ -221,7 +221,7 @@ class RtcClient extends ChangeNotifier {
     rtcConnectionState = RtcConnectionState.connecting;
     notifyListeners();
     RTCPeerConnection connection = await _createRtcPeerConnection();
-    recipient = offer.sender;
+    //recipient = offer.sender;
     await connection.setRemoteDescription(RTCSessionDescription(
       offer.data["sdp"],
       offer.data["type"],
@@ -235,8 +235,8 @@ class RtcClient extends ChangeNotifier {
     candidates.clear();
 
     SignalingMessage message = SignalingMessage();
-    message.sender = _signalingClient.uid;
-    message.recipient = offer.sender;
+    //message.sender = _signalingClient.uid;
+    //message.recipient = offer.sender;
     message.type = SignalingMessageType.answer;
     message.data = answer.toMap();
     _rtcPeerConnection = connection;
@@ -246,8 +246,8 @@ class RtcClient extends ChangeNotifier {
   Future<void> hangup() async {
     if (null == _rtcPeerConnection) return;
     SignalingMessage message = SignalingMessage();
-    message.sender = _signalingClient.uid;
-    message.recipient = recipient;
+    //message.sender = _signalingClient.uid;
+    //message.recipient = recipient;
     message.type = SignalingMessageType.leave;
     _signalingClient.send(message);
     abort();

@@ -4,6 +4,7 @@ import 'package:dieklingel_base/database/objectdb_factory.dart';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:dieklingel_base/register_listeners.dart';
+import 'package:dieklingel_base/rtc/mqtt_rtc_description.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -165,7 +166,7 @@ class _MyApp extends State<MyApp> {
       }),
     );
 
-    client.recipient = offerMessage.sender;
+    //client.recipient = offerMessage.sender;
 
     appSettings.log(
       "request to start rtc acknowledged for ${client.recipient}, active calls: ${rtcClientsModel.clients.length}",
@@ -199,10 +200,13 @@ class _MyApp extends State<MyApp> {
                 geometry = insets;
               });
               MClient mClient = context.read<MClient>();
+
+              Uri uri = Uri.parse(config["mqtt"]["uri"] as String);
+
+              mClient.mqttRtcDescription = MqttRtcDescription.parse(uri);
+
               SignalingClient signalingClient = context.read<SignalingClient>();
-              mClient.host = config["mqtt"]["address"] as String;
-              mClient.port = config["mqtt"]["port"] as int;
-              mClient.prefix = config["uid"] ?? "";
+
               await mClient.connect(
                 username: config["mqtt"]["username"],
                 password: config["mqtt"]["password"],
