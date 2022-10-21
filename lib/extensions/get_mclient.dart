@@ -11,7 +11,7 @@ extension Get on MClient {
       String returnVal = await executer(message.message);
       publish(
         MClientTopicMessage(
-          topic: "${message.topic}response",
+          topic: "${message.topic}/response",
           message: returnVal,
         ),
       );
