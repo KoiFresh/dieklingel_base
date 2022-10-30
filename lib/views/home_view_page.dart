@@ -78,6 +78,8 @@ class _HomeViewPage extends State<HomeViewPage> {
         payload: event.message,
       );
       context.read<EventMonitor>().add(even);
+
+      // TODO: play alert sound
     });
   }
 

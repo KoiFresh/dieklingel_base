@@ -35,7 +35,6 @@ dependencies:
   cupertino_icons: ^1.0.2
   mqtt_client: ^9.6.7
   flutter_webrtc: ^0.9.3
-  # audioplayers: ^1.0.1
   shared_preferences: ^2.0.15
   http: ^0.13.4
   flutter_html: ^3.0.0-alpha.3
@@ -75,6 +74,7 @@ flutter:
     - resources/images/bell.png
     - resources/images/clapper.png
     - resources/audio/doorbell.wav
+    - resources/audio/alert.wav
     - resources/config/config.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
