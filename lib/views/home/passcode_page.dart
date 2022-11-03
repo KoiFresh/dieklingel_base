@@ -48,6 +48,7 @@ class _PasscodePage extends State<PasscodePage> {
       width: 304,
       height: 412,
       child: GridView.count(
+        physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
