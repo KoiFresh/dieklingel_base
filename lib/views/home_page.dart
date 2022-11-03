@@ -12,7 +12,6 @@ import 'package:objectdb/objectdb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
-import 'awake_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +19,6 @@ import 'components/sign.dart';
 import 'components/user_notification.dart';
 import 'home/screensaver_page.dart';
 import '../components/app_settings.dart';
-import '../rtc/rtc_clients_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key, required this.config}) : super(key: key);
@@ -35,14 +33,8 @@ class _HomeViewPage extends State<HomePage> {
   late final Map<String, dynamic> config = widget.config;
   final List<UserNotificationSkeleton> userNotifications = [];
 
-  bool notifyEnabled = true;
-
   MClient get messagingClient {
     return Provider.of<MClient>(context, listen: false);
-  }
-
-  RtcClientsModel get rtcClientsModel {
-    return Provider.of<RtcClientsModel>(context, listen: false);
   }
 
   AppSettings get appSettings {
@@ -165,7 +157,7 @@ class _HomeViewPage extends State<HomePage> {
                     MainPage(
                       signs: signs,
                     ),
-                    PasscodePage(),
+                    const PasscodePage(),
                   ],
                 )
               : ScreensaverPage(

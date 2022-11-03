@@ -13,21 +13,16 @@ import 'package:provider/provider.dart';
 import 'components/app_settings.dart';
 import 'globals.dart' as app;
 import 'messaging/mclient.dart';
-import 'rtc/rtc_clients_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await app.init();
 
-  RtcClientsModel rtcClientsModel = RtcClientsModel();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: ((context) => MClient()),
-        ),
-        ChangeNotifierProvider(
-          create: ((context) => rtcClientsModel),
         ),
         ChangeNotifierProvider(
           create: (context) => AppSettings(),
@@ -52,10 +47,6 @@ class _MyApp extends State<MyApp> {
   EdgeInsetsGeometry geometry = const EdgeInsets.all(0);
   final RTCVideoRenderer _rtcVideoRenderer = RTCVideoRenderer();
   late final Map<String, dynamic> config;
-
-  RtcClientsModel get rtcClientsModel {
-    return Provider.of<RtcClientsModel>(context, listen: false);
-  }
 
   AppSettings get appSettings {
     return Provider.of<AppSettings>(context, listen: false);
