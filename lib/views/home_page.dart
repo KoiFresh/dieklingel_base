@@ -6,6 +6,7 @@ import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
 import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
+import 'package:dieklingel_base/rtc/mqtt_rtc_description.dart';
 import 'package:dieklingel_base/views/home/main_page.dart';
 import 'package:dieklingel_base/views/home/passcode_page.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -45,6 +46,11 @@ class _HomeViewPage extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    MClient mclient = context.read<MClient>();
+    mclient.mqttRtcDescription = MqttRtcDescription.parse(
+      Uri.parse(config["mqtt"]["uri"]),
+    );
+    mclient.connect();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) => initialize());
   }
 
