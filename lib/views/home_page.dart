@@ -5,6 +5,8 @@ import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
 import 'package:dieklingel_base/event/system_event_type.dart';
 import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
+import 'package:dieklingel_base/views/home/main_page.dart';
+import 'package:dieklingel_base/views/home/passcode_page.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:objectdb/objectdb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
@@ -16,21 +18,20 @@ import 'package:provider/provider.dart';
 
 import 'components/sign.dart';
 import 'components/user_notification.dart';
-import 'screensaver_view.dart';
+import 'home/screensaver_page.dart';
 import '../components/app_settings.dart';
 import '../rtc/rtc_clients_model.dart';
-import '../signaling/signaling_client.dart';
 
-class HomeViewPage extends StatefulWidget {
-  const HomeViewPage({Key? key, required this.config}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key, required this.config}) : super(key: key);
 
   final Map<String, dynamic> config;
 
   @override
-  State<HomeViewPage> createState() => _HomeViewPage();
+  State<HomePage> createState() => _HomeViewPage();
 }
 
-class _HomeViewPage extends State<HomeViewPage> {
+class _HomeViewPage extends State<HomePage> {
   late final Map<String, dynamic> config = widget.config;
   final List<UserNotificationSkeleton> userNotifications = [];
 
@@ -38,10 +39,6 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   MClient get messagingClient {
     return Provider.of<MClient>(context, listen: false);
-  }
-
-  SignalingClient get signalingClient {
-    return Provider.of<SignalingClient>(context, listen: false);
   }
 
   RtcClientsModel get rtcClientsModel {
@@ -149,21 +146,11 @@ class _HomeViewPage extends State<HomeViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double clipLeft = config["viewport"]["clip"]["left"] ?? 0.0;
-    final double clipTop = config["viewport"]["clip"]["top"] ?? 0.0;
-    final double clipRight = config["viewport"]["clip"]["right"] ?? 0.0;
-    final double clipBottom = config["viewport"]["clip"]["bottom"] ?? 0.0;
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double width = screenWidth - clipLeft - clipRight;
-    final double height = screenHeight - clipTop - clipBottom;
-
     List<Sign> signs = (config["signs"] as List<dynamic>).map(
       (element) {
         return Sign(
           element["text"],
           element["hash"],
-          height,
           onTap: _onSignTap,
         );
       },
@@ -173,15 +160,16 @@ class _HomeViewPage extends State<HomeViewPage> {
       body: Stack(
         children: [
           context.watch<AppSettings>().displayIsActive.value
-              ? AwakeView(
-                  width: width,
-                  height: height,
-                  signs: signs,
+              ? PageView(
+                  children: [
+                    MainPage(
+                      signs: signs,
+                    ),
+                    PasscodePage(),
+                  ],
                 )
-              : ScreensaverView(
+              : ScreensaverPage(
                   text: config["viewport"]?["screensaver"]?["text"] ?? "",
-                  width: width,
-                  height: height,
                   onTap: _onScreensaverTap,
                 ),
           Stack(

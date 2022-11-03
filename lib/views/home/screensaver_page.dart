@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
-class ScreensaverView extends StatelessWidget {
-  const ScreensaverView({
+class ScreensaverPage extends StatelessWidget {
+  const ScreensaverPage({
     super.key,
     required this.text,
-    required this.width,
-    required this.height,
     this.onTap,
   });
 
-  final double width;
-  final double height;
   final String text;
   final Function? onTap;
 
@@ -24,8 +20,6 @@ class ScreensaverView extends StatelessWidget {
     return GestureDetector(
       onTap: _onTap,
       child: Container(
-        width: width,
-        height: height,
         color: Colors.black,
         child: Center(
           child: Html(
