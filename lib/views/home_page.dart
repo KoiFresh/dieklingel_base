@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dieklingel_base/database/objectdb_factory.dart';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
@@ -68,7 +69,7 @@ class _HomeViewPage extends State<HomePage> {
       );
       context.read<EventMonitor>().add(even);
 
-      // TODO: play alert sound
+      AudioPlayer().play(AssetSource("audio/alert.wav"));
     });
   }
 

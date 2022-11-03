@@ -89,7 +89,7 @@ class _MyApp extends State<MyApp> {
   }
 
   Future<Map<String, dynamic>> _config() async {
-    String configPath = "resources/config/config.json";
+    String configPath = "config/config.json";
     String raw = await rootBundle.loadString(configPath);
     Map<String, dynamic> config = jsonDecode(raw);
     return config;

@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dieklingel_base/views/home/passcode/passcode_button.dart';
 import 'package:dieklingel_base/views/home/passcode/passcode_indicator.dart';
 import 'package:flutter/cupertino.dart';
@@ -22,6 +23,7 @@ class _PasscodePage extends State<PasscodePage> {
   }
 
   void _onPasscodeBtnTapped(String text) {
+    AudioPlayer().play(AssetSource("audio/key.wav"));
     setState(() {
       _passcode += text;
     });
@@ -38,6 +40,7 @@ class _PasscodePage extends State<PasscodePage> {
   }
 
   void _onRemoveBtnTapped() {
+    AudioPlayer().play(AssetSource("audio/key.wav"));
     setState(() {
       _passcode = _passcode.substring(0, _passcode.length - 1);
     });
