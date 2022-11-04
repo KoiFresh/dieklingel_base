@@ -9,12 +9,12 @@ import 'package:dieklingel_base/messaging/mclient_topic_message.dart';
 import 'package:dieklingel_base/rtc/mqtt_rtc_description.dart';
 import 'package:dieklingel_base/views/home/main_page.dart';
 import 'package:dieklingel_base/views/home/passcode_page.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:objectdb/objectdb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'components/sign.dart';
@@ -155,8 +155,8 @@ class _HomeViewPage extends State<HomePage> {
       },
     ).toList();
 
-    return Scaffold(
-      body: Stack(
+    return CupertinoPageScaffold(
+      child: Stack(
         children: [
           context.watch<AppSettings>().displayIsActive.value
               ? PageView(
