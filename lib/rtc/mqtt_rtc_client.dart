@@ -1,24 +1,26 @@
 import 'dart:convert';
 
-import 'package:dieklingel_base/rtc/rtc_transceiver.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+
+import 'rtc_connection_state.dart';
+import 'rtc_transceiver.dart';
 
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
+import '../messaging/mclient_state.dart';
 import '../messaging/mclient_subscribtion.dart';
-import '../messaging/mclient_topic_message.dart';
-import 'mqtt_rtc_description.dart';
-import 'rtc_connection_state.dart';
+import '../models/ice_server.dart';
+import '../models/mqtt_uri.dart';
 import '../signaling/signaling_message.dart';
 import '../signaling/signaling_message_type.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class MqttRtcClient extends ChangeNotifier {
   final String username;
   final String password;
-  final MqttRtcDescription mqttRtcDescription;
+  final MqttUri uri;
   final MediaRessource mediaRessource;
-  final RTCVideoRenderer rtcVideoRenderer = RTCVideoRenderer()..initialize();
+  final RTCVideoRenderer rtcVideoRenderer = RTCVideoRenderer();
 
   late final MClient mclient;
   late final MClientSubscribtion sub;
@@ -37,26 +39,26 @@ class MqttRtcClient extends ChangeNotifier {
   }
 
   MqttRtcClient.invite(
-    this.mqttRtcDescription,
+    this.uri,
     this.mediaRessource, {
     this.username = "",
     this.password = "",
   }) {
     rtcVideoRenderer.initialize();
-    mclient = MClient(mqttRtcDescription: mqttRtcDescription);
+    mclient = MClient();
 
     topic = "invite";
     sub = mclient.subscribe("answer", _onMessage);
   }
 
   MqttRtcClient.answer(
-    this.mqttRtcDescription,
+    this.uri,
     this.mediaRessource, {
     this.username = "",
     this.password = "",
   }) {
     rtcVideoRenderer.initialize();
-    mclient = MClient(mqttRtcDescription: mqttRtcDescription);
+    mclient = MClient();
 
     topic = "answer";
     sub = mclient.subscribe("invite", _onMessage);
@@ -65,10 +67,21 @@ class MqttRtcClient extends ChangeNotifier {
   /// make sure to open the media ressource before calling init
   Future<void> init({
     List<RtcTransceiver> transceivers = const [],
-    Map<String, dynamic> iceServers = const {},
+    List<IceServer> iceServers = const [],
   }) async {
-    await mclient.connect(username: username, password: password);
-    _rtcPeerConnection = await createPeerConnection(iceServers);
+    await mclient.connect(uri, username: username, password: password);
+
+    List<Map<String, dynamic>> servers = iceServers
+        .map(
+          (e) => {
+            "urls": e.urls,
+            "username": e.username,
+            "credential": e.credential
+          },
+        )
+        .toList();
+
+    _rtcPeerConnection = await createPeerConnection({"iceServers": servers});
 
     MediaStream? stream = mediaRessource.stream;
     if (null != stream) {
@@ -91,9 +104,9 @@ class MqttRtcClient extends ChangeNotifier {
     }
   }
 
-  void _onMessage(MClientTopicMessage message) async {
+  void _onMessage(String topic, String message) async {
     SignalingMessage smes = SignalingMessage.fromJson(
-      jsonDecode(message.message),
+      jsonDecode(message),
     );
     switch (smes.type) {
       case SignalingMessageType.offer:
@@ -127,14 +140,10 @@ class MqttRtcClient extends ChangeNotifier {
   }
 
   void _onIceCandidate(RTCIceCandidate candidate) {
-    SignalingMessage smes = SignalingMessage();
-    smes.type = SignalingMessageType.candidate;
-    smes.data = candidate.toMap();
-    MClientTopicMessage tmes = MClientTopicMessage(
-      topic: topic,
-      message: smes.toString(),
-    );
-    mclient.publish(tmes);
+    SignalingMessage message = SignalingMessage()
+      ..type = SignalingMessageType.candidate
+      ..data = candidate.toMap();
+    mclient.publish(topic, message.toJsonString());
   }
 
   void _onConnectionState(RTCPeerConnectionState state) {
@@ -149,6 +158,7 @@ class MqttRtcClient extends ChangeNotifier {
       default:
         break;
     }
+    notifyListeners();
   }
 
   void _onTrack(RTCTrackEvent event) {
@@ -162,14 +172,12 @@ class MqttRtcClient extends ChangeNotifier {
     __rtcConnectionState = RtcConnectionState.connecting;
     RTCSessionDescription offer = await _rtcPeerConnection.createOffer(options);
     await _rtcPeerConnection.setLocalDescription(offer);
-    SignalingMessage smes = SignalingMessage();
-    smes.type = SignalingMessageType.offer;
-    smes.data = offer.toMap();
-    MClientTopicMessage tmes = MClientTopicMessage(
-      topic: topic,
-      message: smes.toString(),
-    );
-    mclient.publish(tmes);
+
+    SignalingMessage smes = SignalingMessage()
+      ..type = SignalingMessageType.offer
+      ..data = offer.toMap();
+
+    mclient.publish(topic, smes.toJsonString());
   }
 
   Future<void> _answer(SignalingMessage offer) async {
@@ -183,27 +191,22 @@ class MqttRtcClient extends ChangeNotifier {
     RTCSessionDescription answer = await _rtcPeerConnection.createAnswer();
     await _rtcPeerConnection.setLocalDescription(answer);
 
-    SignalingMessage smes = SignalingMessage();
-    smes.type = SignalingMessageType.answer;
-    smes.data = answer.toMap();
-    MClientTopicMessage tmes = MClientTopicMessage(
-      topic: topic,
-      message: smes.toString(),
-    );
-    mclient.publish(tmes);
+    SignalingMessage message = SignalingMessage()
+      ..type = SignalingMessageType.answer
+      ..data = answer.toMap();
+
+    mclient.publish(topic, message.toJsonString());
   }
 
   Future<void> close() async {
-    SignalingMessage smes = SignalingMessage();
-    smes.type = SignalingMessageType.leave;
-    MClientTopicMessage tmes = MClientTopicMessage(
-      topic: topic,
-      message: smes.toString(),
-    );
-    if (mclient.isConnected()) {
-      mclient.publish(tmes);
+    SignalingMessage message = SignalingMessage()
+      ..type = SignalingMessageType.leave;
+
+    if (mclient.state == MClientState.connected) {
+      mclient.publish(topic, message.toJsonString());
     }
 
+    // TODO: fix disconnection
     return Future.delayed(const Duration(seconds: 1), () async {
       mclient.disconnect();
       await _rtcPeerConnection.close();

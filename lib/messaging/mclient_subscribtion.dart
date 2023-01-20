@@ -1,8 +1,6 @@
-import 'mclient_topic_message.dart';
-
 class MClientSubscribtion {
   final String topic;
-  final void Function(MClientTopicMessage message) listener;
+  final void Function(String topic, String message) listener;
   final RegExp regExp;
 
   MClientSubscribtion(this.topic, {required this.listener, regExp})

@@ -5,11 +5,4 @@ class RtcTransceiver {
   TransceiverDirection direction;
 
   RtcTransceiver({required this.kind, required this.direction});
-
-  dynamic toAddableTransiver() {
-    return {
-      "kind": kind,
-      "init": RTCRtpTransceiverInit(direction: direction),
-    };
-  }
 }

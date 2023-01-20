@@ -17,6 +17,10 @@ class SignalingMessage {
         'data': data,
       };
 
+  String toJsonString() {
+    return jsonEncode(toJson());
+  }
+
   @override
   String toString() {
     return jsonEncode(toJson());

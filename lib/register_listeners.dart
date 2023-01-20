@@ -9,7 +9,6 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:objectdb/objectdb.dart';
 
 import 'event/event_monitor.dart';
-import 'extensions/get_mclient.dart';
 import 'messaging/mclient.dart';
 import 'messaging/mclient_topic_message.dart';
 
@@ -65,17 +64,18 @@ void registerListeners({
 
   /// listen for system events to publish
   eventMonitor.addListener(() {
-    if (mClient.connectionState != MqttConnectionState.connected) return;
+    /* if (mClient.connectionState != MqttConnectionState.connected) return;
     MClientTopicMessage message = MClientTopicMessage(
       topic: "system/event/",
       message: jsonEncode(eventMonitor.events.last),
     );
-    mClient.publish(message);
+    mClient.publish(message);*/
   });
 
   List<MqttRtcClient> clients = [];
 
   print("listen");
+  /*
   mClient.listen("request/rtc/test/", (message) async {
     print("request to open rtc");
     MqttRtcDescription rec = MqttRtcDescription.fromJson(
@@ -130,14 +130,15 @@ void registerListeners({
     clients.add(m);
     return "OK";
   });
+  */
 
   /// listen for change of the display state
-  mClient.subscribe("io/display/state", (message) {
+  /* mClient.subscribe("io/display/state", (message) {
     appSettings.displayIsActive.value = message.message == "on";
-  });
+  }); */
 
   /// listen for changes of display state
-  appSettings.displayIsActive.addListener(() {
+  /* appSettings.displayIsActive.addListener(() {
     if (mClient.connectionState != MqttConnectionState.connected) {
       return;
     }
@@ -146,10 +147,10 @@ void registerListeners({
       message: appSettings.displayIsActive.value ? "on" : "off",
     );
     mClient.publish(message);
-  });
+  }); */
 
   /// listen for new notification token
-  mClient.subscribe(
+  /* mClient.subscribe(
     "firebase/notification/token/add",
     (event) {
       Map<String, dynamic> message = jsonDecode(event.message);
@@ -162,5 +163,5 @@ void registerListeners({
         appSettings.signHashs[hash] = hashs;
       }
     },
-  );
+  ); */
 }

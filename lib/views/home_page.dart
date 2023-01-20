@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:dieklingel_base/database/objectdb_factory.dart';
+//import 'package:audioplayers/audioplayers.dart';
 import 'package:dieklingel_base/event/event_monitor.dart';
 import 'package:dieklingel_base/event/system_event.dart';
 import 'package:dieklingel_base/event/system_event_type.dart';
@@ -47,15 +46,15 @@ class _HomeViewPage extends State<HomePage> {
   void initState() {
     super.initState();
     MClient mclient = context.read<MClient>();
-    mclient.mqttRtcDescription = MqttRtcDescription.parse(
+    /* mclient.mqttRtcDescription = MqttRtcDescription.parse(
       Uri.parse(config["mqtt"]["uri"]),
-    );
-    mclient.connect();
+    );*/
+    //mclient.connect();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) => initialize());
   }
 
   void initialize() {
-    context.read<MClient>().subscribe("io/user/notification", (event) {
+    /* context.read<MClient>().subscribe("io/user/notification", (event) {
       UserNotificationSkeleton skeleton = UserNotificationSkeleton.fromJson(
         {
           "key": UniqueKey().toString(),
@@ -75,8 +74,8 @@ class _HomeViewPage extends State<HomePage> {
       );
       context.read<EventMonitor>().add(even);
 
-      AudioPlayer().play(AssetSource("audio/alert.wav"));
-    });
+      //AudioPlayer().play(AssetSource("audio/alert.wav"));
+    });*/
   }
 
   void _onSignTap(String id) async {
@@ -85,7 +84,7 @@ class _HomeViewPage extends State<HomePage> {
     MClient mClient = context.read<MClient>();
 
     // publish sign information
-    if (mClient.isConnected()) {
+    /* if (mClient.isConnected()) {
       List<dynamic> payloads = [];
 
       ObjectDB database = ObjectDBFactory.get();
@@ -103,8 +102,8 @@ class _HomeViewPage extends State<HomePage> {
         topic: "io/action/sign/clicked",
         message: jsonEncode(payload),
       );
-      mClient.publish(message);
-    }
+      //mClient.publish(message);
+    }*/
 
     // publish clicked events
     SystemEvent clickedEvent = SystemEvent(

@@ -1,117 +1,102 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../rtc/mqtt_rtc_description.dart';
-
-import 'mclient_subscribtion.dart';
-import 'mclient_topic_message.dart';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:uuid/uuid.dart';
+
+import 'mclient_state.dart';
+import 'mclient_subscribtion.dart';
+
 import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
+import '../models/mqtt_uri.dart';
 
 class MClient extends ChangeNotifier {
   final List<MClientSubscribtion> _subscribtions = [];
-  MqttRtcDescription? mqttRtcDescription;
-  MqttClient? _mqttClient;
+  MqttUri? _uri;
+  MClientState _state = MClientState.disconnected;
+  MqttClient? _client;
 
-  MClient({this.mqttRtcDescription});
+  String get _prefix => uri?.channel ?? "";
 
-  String get _prefix {
-    MqttRtcDescription? description = mqttRtcDescription;
-    if (null == description) {
-      return "";
-    }
-    return description.channel;
-  }
+  MqttUri? get uri => _uri;
 
-  MqttConnectionState get connectionState {
-    return _mqttClient?.connectionStatus?.state ??
-        MqttConnectionState.disconnected;
-  }
+  MClientState get state => _state;
 
-  bool isConnected() {
-    return connectionState == MqttConnectionState.connected;
-  }
-
-  bool isNotConnected() {
-    return !isConnected();
-  }
-
-  Future<MqttClientConnectionStatus?> connect({
+  Future<MClientState> connect(
+    MqttUri uri, {
     String? username,
     String? password,
   }) async {
-    MqttRtcDescription? description = mqttRtcDescription;
-    if (description == null) {
-      throw "cannot connect mclient without mqtt-rtc-descitpion";
-    }
-    _mqttClient?.disconnect();
-
+    _uri = uri;
+    _client?.disconnect();
     String scheme = "";
-    if (description.websocket) {
-      scheme = description.ssl ? "wss://" : "ws://";
+    if (uri.websocket) {
+      scheme = uri.ssl ? "wss://" : "ws://";
     }
-    _mqttClient = MqttClientFactory.create("$scheme${description.host}", "");
-    _mqttClient!.port = description.port;
-    _mqttClient!.keepAlivePeriod = 20;
-    _mqttClient!.setProtocolV311();
-    _mqttClient!.autoReconnect = true;
-    _mqttClient!.onConnected = () {
-      print("connected");
-      notifyListeners();
-    };
-    _mqttClient!.onDisconnected = () {
-      print("disconnected");
-      notifyListeners();
-    };
-    _mqttClient!.onAutoReconnect = () {
-      print("reconnect");
-      notifyListeners();
-    };
+    _client = MqttClientFactory.create("$scheme${uri.host}", "")
+      ..port = uri.port
+      ..keepAlivePeriod = 20
+      ..setProtocolV311()
+      ..autoReconnect = true
+      ..onConnected = () {
+        _state = MClientState.connected;
+        notifyListeners();
+      }
+      ..onDisconnected = () {
+        _state = MClientState.disconnected;
+        notifyListeners();
+      }
+      ..onAutoReconnect = () {};
 
-    //await _mqttClient!.connect(username, password);
+    _state = MClientState.connecting;
+    notifyListeners();
 
+    MqttClientConnectionStatus? status;
     try {
-      await _mqttClient!.connect(username, password);
+      status = await _client?.connect(username, password);
     } on SocketException {
       rethrow;
+    } finally {
+      _state = status?.state == MqttConnectionState.connected
+          ? MClientState.connected
+          : MClientState.disconnected;
+      notifyListeners();
     }
 
     for (MClientSubscribtion sub in _subscribtions) {
-      String prefix = description.channel;
-      _mqttClient!.subscribe("$prefix${sub.topic}", MqttQos.exactlyOnce);
+      String prefix = uri.channel;
+      _client!.subscribe("$prefix${sub.topic}", MqttQos.exactlyOnce);
     }
-    _mqttClient!.updates!.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
+
+    _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage>>? c) {
       MqttPublishMessage rec = c![0].payload as MqttPublishMessage;
       String topic = c[0].topic;
       if (topic.startsWith(_prefix)) {
         topic = topic.replaceFirst(_prefix, "");
       }
       List<int> messageAsBytes = rec.payload.message;
-      String raw = utf8.decode(messageAsBytes);
-      MClientTopicMessage message = MClientTopicMessage(
-        topic: topic,
-        message: raw,
-      );
+      String message = utf8.decode(messageAsBytes);
       for (MClientSubscribtion sub in _subscribtions) {
         if (sub.regExp.hasMatch(topic)) {
-          sub.listener(message);
+          sub.listener(topic, message);
         }
       }
     });
 
-    return _mqttClient!.connectionStatus;
+    return _state;
   }
 
-  void publish(MClientTopicMessage message) {
-    if (connectionState != MqttConnectionState.connected) {
-      throw "the mqtt client has to be connected, before publish";
+  void publish(String topic, String message) {
+    if (state != MClientState.connected) {
+      throw "the mclient has to be connected, before publish";
     }
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
-    builder.addUTF8String(message.message);
-    _mqttClient!.publishMessage(
-      "$_prefix${message.topic}",
+    builder.addUTF8String(message);
+    _client!.publishMessage(
+      "$_prefix$topic",
       MqttQos.exactlyOnce,
       builder.payload!,
     );
@@ -119,15 +104,21 @@ class MClient extends ChangeNotifier {
 
   MClientSubscribtion subscribe(
     String topic,
-    void Function(MClientTopicMessage message) listener,
+    void Function(String topic, String message) listener,
   ) {
-    RegExp regExp =
-        RegExp(topic..replaceAll("\\+", "[^/]+").replaceAll("#", ".+"));
-    MClientSubscribtion subscribtion =
-        MClientSubscribtion(topic, listener: listener, regExp: regExp);
+    RegExp regExp = RegExp(
+      topic..replaceAll("\\+", "[^/]+").replaceAll("#", ".+"),
+    );
+    MClientSubscribtion subscribtion = MClientSubscribtion(
+      topic,
+      listener: listener,
+      regExp: regExp,
+    );
     _subscribtions.add(subscribtion);
-    if (isNotConnected()) return subscribtion;
-    _mqttClient?.subscribe("$_prefix$topic", MqttQos.exactlyOnce);
+    if (state != MClientState.connected) {
+      return subscribtion;
+    }
+    _client?.subscribe("$_prefix$topic", MqttQos.exactlyOnce);
     return subscribtion;
   }
 
@@ -138,11 +129,40 @@ class MClient extends ChangeNotifier {
         return;
       }
     }
-    _mqttClient?.unsubscribe(subscribtion.topic);
+    _client?.unsubscribe(subscribtion.topic);
   }
 
-  void disconnect() {
-    _mqttClient?.disconnect();
-    _mqttClient = null;
+  Future<String?> get(
+    String topic,
+    String request, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    Completer<String?> completer = Completer<String?>();
+    String identifier = const Uuid().v4();
+    MClientSubscribtion sub = subscribe(
+      "$topic$identifier/response",
+      (topic, message) {
+        completer.complete(message);
+      },
+    );
+    publish("$topic$identifier", request);
+    String? result = await completer.future.timeout(
+      timeout,
+      onTimeout: () => null,
+    );
+    unsubscribe(sub);
+    return result;
+  }
+
+  void listen(String topic, Future<String> Function(String message) executer) {
+    subscribe("$topic+", (topic, message) async {
+      String returnVal = await executer(message);
+      publish("${topic}response", returnVal);
+    });
+  }
+
+  Future<void> disconnect() async {
+    _client?.disconnect();
+    _client = null;
   }
 }
