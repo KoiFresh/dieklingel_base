@@ -157,7 +157,7 @@ class MClient extends ChangeNotifier {
   void listen(String topic, Future<String> Function(String message) executer) {
     subscribe("$topic+", (topic, message) async {
       String returnVal = await executer(message);
-      publish("${topic}response", returnVal);
+      publish("$topic/response", returnVal);
     });
   }
 

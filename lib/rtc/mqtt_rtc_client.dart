@@ -81,7 +81,11 @@ class MqttRtcClient extends ChangeNotifier {
         )
         .toList();
 
-    _rtcPeerConnection = await createPeerConnection({"iceServers": servers});
+    print(servers);
+    Map<String, dynamic> config = {};
+    config["iceServers"] = servers;
+
+    _rtcPeerConnection = await createPeerConnection(config);
 
     MediaStream? stream = mediaRessource.stream;
     if (null != stream) {

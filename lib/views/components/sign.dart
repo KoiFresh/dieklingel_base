@@ -1,5 +1,5 @@
 //import 'package:audioplayers/audioplayers.dart';
-//import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -24,7 +24,7 @@ class Sign extends StatefulWidget {
 class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   late final AnimationController _animationController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1000),
+    duration: const Duration(seconds: 1),
   );
   //final AudioCache cache = AudioCache(prefix: "resources/");
   //final AudioPlayer player = AudioPlayer();
@@ -69,7 +69,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                             .chain(CurveTween(curve: Curves.elasticIn))
                             .animate(_animationController),
                         child: Image.asset(
-                          "images/clapper.png",
+                          "assets/images/clapper.png",
                           fit: BoxFit.fitHeight,
                           height: constraints.maxHeight / 4,
                         ),
@@ -82,7 +82,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
                             .chain(CurveTween(curve: Curves.elasticIn))
                             .animate(_animationController),
                         child: Image.asset(
-                          "images/bell.png",
+                          "assets/images/bell.png",
                           fit: BoxFit.fitHeight,
                           height: constraints.maxHeight / 4,
                         ),
