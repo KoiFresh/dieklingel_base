@@ -16,7 +16,7 @@ import 'models/mqtt_uri.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await windowManager.setFullScreen(true);
+  //await windowManager.setFullScreen(true);
 
   Map<String, dynamic> config = await getConfig();
 

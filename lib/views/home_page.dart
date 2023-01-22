@@ -10,7 +10,6 @@ import 'package:dieklingel_base/views/home/main_page.dart';
 import 'package:dieklingel_base/views/home/passcode_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:objectdb/objectdb.dart';
 import '../extensions/byte64_converter_byte_buffer.dart';
 import '../media/media_ressource.dart';
 import '../messaging/mclient.dart';
@@ -146,11 +145,13 @@ class _HomeViewPage extends State<HomePage> {
   Widget build(BuildContext context) {
     List<Sign> signs = (config["signs"] as List<dynamic>).map(
       (element) {
-        return Sign(
+        /* return Sign(
           element["text"],
           element["hash"],
           onTap: _onSignTap,
         );
+        */
+        throw "--";
       },
     ).toList();
 

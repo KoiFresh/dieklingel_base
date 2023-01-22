@@ -6,7 +6,6 @@ import 'package:dieklingel_base/rtc/mqtt_rtc_client.dart';
 import 'package:dieklingel_base/rtc/mqtt_rtc_description.dart';
 import 'package:dieklingel_base/rtc/rtc_connection_state.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:objectdb/objectdb.dart';
 
 import 'event/event_monitor.dart';
 import 'messaging/mclient.dart';
@@ -18,7 +17,6 @@ void registerListeners({
   required MClient mClient,
   required EventMonitor eventMonitor,
   required AppSettings appSettings,
-  required ObjectDB databse,
 }) {
   Future(() async {});
 
@@ -40,24 +38,7 @@ void registerListeners({
       if (json["hash"] == null || json["hash"] == "") {
         return "ERROR";
       }
-      int updated = await databse.update(
-        {
-          "hash": json["hash"],
-          "payload": json["payload"],
-        },
-        {
-          "timestamp": DateTime.now().toUtc().toIso8601String(),
-        },
-      );
-      if (updated < 1) {
-        await databse.insert(
-          {
-            "hash": json["hash"],
-            "payload": json["hash"],
-            "timestamp": DateTime.now().toUtc().toIso8601String(),
-          },
-        );
-      }
+
       return "OK";
     },
   );

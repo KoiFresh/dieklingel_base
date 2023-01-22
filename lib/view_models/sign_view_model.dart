@@ -1,19 +1,20 @@
+import 'package:dieklingel_base/models/sign_options.dart';
 import 'package:dieklingel_base/views/components/sign.dart';
 import 'package:flutter/cupertino.dart';
 
 class SignViewModel extends ChangeNotifier {
   Map<String, dynamic> config = {};
 
-  List<Sign> signs = [];
+  List<SignOptions> options = [];
 
   void init({required Map<String, dynamic> config}) {
     this.config = config;
 
-    List<dynamic> signs = config["signs"] ?? [];
-    this.signs.clear();
-    for (dynamic sign in signs) {
-      Sign s = Sign(sign["text"], sign["hash"]);
-      this.signs.add(s);
+    List<dynamic> configuarations = config["signs"] ?? [];
+    options.clear();
+    for (dynamic conf in configuarations) {
+      SignOptions option = SignOptions.fromMap(conf);
+      options.add(option);
     }
 
     notifyListeners();
