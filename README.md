@@ -32,3 +32,9 @@ Dieses Projekt beinhaltet die Basis des dieKlingel Projeckts.
     ```bash
     chromium-browser --noerrdialogs --disable-infobars --allow-file-access-from-files --kiosk build/web/index.html &> /dev/null
     ```
+
+# Linux Desktop Build
+
+```bash
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-bad1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev
+```

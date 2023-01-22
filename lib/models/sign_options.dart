@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 part 'sign_options.g.dart';
 
@@ -12,22 +16,27 @@ class SignOptions extends HiveObject {
   final String identifier;
 
   @HiveField(1)
-  final String filepath;
+  final String lottie;
 
   @HiveField(2)
-  final String color;
+  final String sound;
+
+  @HiveField(3)
+  final Color color;
 
   SignOptions({
     required this.identifier,
-    required this.filepath,
+    required this.lottie,
+    required this.sound,
     required this.color,
   });
 
   factory SignOptions.fromMap(Map<String, dynamic> json) {
     return SignOptions(
-      identifier: json["identifier"],
-      filepath: json["filepath"],
-      color: json["color"] ?? "#000000",
+      identifier: json["identifier"] ?? "",
+      lottie: json["lottie"] ?? "",
+      sound: json["sound"] ?? "",
+      color: Colors.black,
     );
   }
 
@@ -42,6 +51,6 @@ class SignOptions extends HiveObject {
 
   @override
   String toString() {
-    return "identifier: $identifier; filepath: $filepath; color: $color;";
+    return "identifier: $identifier; lottie: $lottie; sound: $sound, color: $color;";
   }
 }
