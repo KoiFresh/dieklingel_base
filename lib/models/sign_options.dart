@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 part 'sign_options.g.dart';
@@ -19,9 +16,12 @@ class SignOptions extends HiveObject {
   final String lottie;
 
   @HiveField(2)
-  final String sound;
+  final String html;
 
   @HiveField(3)
+  final String sound;
+
+  @HiveField(4)
   final Color color;
 
   SignOptions({
@@ -29,6 +29,7 @@ class SignOptions extends HiveObject {
     required this.lottie,
     required this.sound,
     required this.color,
+    required this.html,
   });
 
   factory SignOptions.fromMap(Map<String, dynamic> json) {
@@ -36,6 +37,7 @@ class SignOptions extends HiveObject {
       identifier: json["identifier"] ?? "",
       lottie: json["lottie"] ?? "",
       sound: json["sound"] ?? "",
+      html: json["html"] ?? "",
       color: Colors.black,
     );
   }
