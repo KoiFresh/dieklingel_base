@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dieklingel_base/bloc/bloc_provider.dart';
+import 'package:dieklingel_base/blocs/app_bloc.dart';
 import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:dieklingel_base/view_models/home_view_model.dart';
 import 'package:dieklingel_base/views/home_view.dart';
@@ -16,6 +18,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   Map<String, dynamic> config = await getConfig();
+
+  //await configure(config);
 
   await Hive.initFlutter();
   Hive
@@ -34,8 +38,11 @@ void main() async {
           create: ((context) => MClient()),
         ),
       ],
-      child: MyApp(
-        config: config,
+      child: BlocProvider(
+        bloc: AppBloc(),
+        child: MyApp(
+          config: config,
+        ),
       ),
     ),
   );
@@ -52,6 +59,58 @@ Future<Map<String, dynamic>> getConfig() async {
     // could not load, do nothing
   }
   return result;
+}
+
+Future<void> configure(Map<String, dynamic> config) async {
+  Box settings = Hive.box("settings");
+
+  settings.put(
+    "mqtt.uri",
+    MqttUri.fromUri(
+      Uri.parse(config["mqtt"]?["uri"] ?? ""),
+    ),
+  );
+
+  settings.put("mqtt.username", config["mqtt"]?["username"] ?? "");
+  settings.put("mqtt.password", config["mqtt"]?["password"] ?? "");
+
+  settings.put(
+    "viewport.clip.left",
+    double.parse(
+      config["viewport"]?["clip"]?["left"]?.toString() ?? "0",
+    ),
+  );
+
+  settings.put(
+    "viewport.clip.top",
+    double.parse(
+      config["viewport"]?["clip"]?["top"]?.toString() ?? "0",
+    ),
+  );
+
+  settings.put(
+    "viewport.clip.right",
+    double.parse(
+      config["viewport"]?["clip"]?["right"]?.toString() ?? "0",
+    ),
+  );
+
+  settings.put(
+    "viewport.clip.bottom",
+    double.parse(
+      config["viewport"]?["clip"]?["bottom"]?.toString() ?? "0",
+    ),
+  );
+
+  settings.put(
+    "screensaver.enabled",
+    config["screensaver"]?["enabled"] as bool? ?? true,
+  );
+
+  settings.put(
+    "screensaver.file",
+    config["screensaver"]?["file"] as String? ?? "",
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -81,20 +140,28 @@ class _MyApp extends State<MyApp> {
       ),
     );
 
-    return Container(
-      color: Colors.black,
-      padding: insets,
-      child: ClipRRect(
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        borderRadius: BorderRadius.circular(20),
-        child: CupertinoApp(
-          scrollBehavior: TouchScrollBehavior(),
-          home: HomeView(
-            vm: HomeViewModel(),
-            config: widget.config,
+    return StreamBuilder(
+      stream: context.bloc<AppBloc>().clip,
+      builder: (
+        BuildContext context,
+        AsyncSnapshot<EdgeInsets> snapshot,
+      ) {
+        return Container(
+          color: Colors.black,
+          padding: snapshot.data,
+          child: ClipRRect(
+            clipBehavior: Clip.antiAliasWithSaveLayer,
+            borderRadius: BorderRadius.circular(20),
+            child: CupertinoApp(
+              scrollBehavior: TouchScrollBehavior(),
+              home: HomeView(
+                vm: HomeViewModel(),
+                config: widget.config,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

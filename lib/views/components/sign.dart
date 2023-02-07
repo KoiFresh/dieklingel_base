@@ -22,7 +22,8 @@ class Sign extends StatefulWidget {
 
 class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(vsync: this);
-  late final AudioPlayer _player = AudioPlayer();
+  // use same player id, to only play one sound at a time
+  final AudioPlayer _player = AudioPlayer(playerId: "dieklingel");
 
   late final bool _isLottie;
   late final bool _isHtml;
@@ -37,7 +38,10 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     _hasSound = widget.options.sound.isNotEmpty;
 
     if (_hasSound) {
-      _player.setSourceDeviceFile(widget.options.sound);
+      Future(() async {
+        await _player.setReleaseMode(ReleaseMode.stop);
+        await _player.setSourceDeviceFile(widget.options.sound);
+      });
     }
   }
 
@@ -92,6 +96,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
         if (_hasSound) {
           await _player.stop();
           await _player.resume();
+          //await _player.play(DeviceFileSource(widget.options.sound));
         }
         if (_isLottie) {
           await _controller.forward(from: 0);
