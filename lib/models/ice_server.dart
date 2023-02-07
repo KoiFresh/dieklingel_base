@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:yaml/yaml.dart';
 part 'ice_server.g.dart';
 
 @HiveType(typeId: 3)
@@ -22,6 +23,14 @@ class IceServer extends HiveObject {
     this.username = "",
     this.credential = "",
   });
+
+  factory IceServer.fromYaml(YamlMap yaml) {
+    return IceServer(
+      urls: yaml["urls"] ?? "",
+      username: yaml["username"] ?? "",
+      credential: yaml["credential"] ?? "",
+    );
+  }
 
   @override
   Future<void> save() async {

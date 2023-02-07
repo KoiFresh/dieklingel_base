@@ -1,17 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/blocs/app_view_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
-import 'package:dieklingel_base/touch_scroll_behavior.dart';
-import 'package:dieklingel_base/view_models/home_view_model.dart';
-import 'package:dieklingel_base/views/components/sign.dart';
-import 'package:dieklingel_base/views/home_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:yaml/yaml.dart';
@@ -128,5 +121,11 @@ Future<void> configure(YamlMap config) async {
     }
 
     await options.save();
+  }
+
+  await IceServer.boxx.clear();
+  for (YamlMap server in config["webrtc"]["ice"]["ice-servers"]) {
+    IceServer iceServer = IceServer.fromYaml(server);
+    await iceServer.save();
   }
 }
