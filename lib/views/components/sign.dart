@@ -24,29 +24,32 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(vsync: this);
   // use same player id, to only play one sound at a time
   final AudioPlayer _player = AudioPlayer(playerId: "dieklingel");
-
-  late final bool _isLottie;
-  late final bool _isHtml;
-  late final bool _hasSound;
+  late bool _hasSound = false;
 
   @override
   void initState() {
+    init();
     super.initState();
+  }
 
-    _isLottie = widget.options.lottie.isNotEmpty;
-    _isHtml = !_isLottie && widget.options.html.isNotEmpty;
-    _hasSound = widget.options.sound.isNotEmpty;
-
-    if (_hasSound) {
-      Future(() async {
-        await _player.setReleaseMode(ReleaseMode.stop);
-        await _player.setSourceDeviceFile(widget.options.sound);
-      });
+  void init() async {
+    if ((widget.options.sound?.isNotEmpty ?? false)) {
+      // should use audio
+      File sound = File(widget.options.sound!);
+      bool exists = await sound.exists();
+      if (!exists) {
+        stdout.writeln(
+          "File ${sound.path} does not exists on Sign ${widget.options.identifier}",
+        );
+      } else {
+        _hasSound = true;
+        await _player.setSourceDeviceFile(widget.options.sound!);
+      }
     }
   }
 
   Widget _lottie(BuildContext context) {
-    File lottiefile = File(widget.options.lottie);
+    File lottiefile = File(widget.options.file);
 
     return Lottie.file(
       lottiefile,
@@ -58,7 +61,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   }
 
   Widget _html(BuildContext context) {
-    File htmlfile = File(widget.options.html);
+    File htmlfile = File(widget.options.file);
 
     return FutureBuilder(
       future: htmlfile.readAsString(),
@@ -68,7 +71,6 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
             child: CircularProgressIndicator(),
           );
         }
-
         return Html(
           data: snapshot.data.toString(),
           style: {
@@ -82,33 +84,52 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     );
   }
 
+  Widget _image(BuildContext context) {
+    return Image.file(
+      File(widget.options.file),
+    );
+  }
+
   Widget _text(BuildContext context) {
     return Center(
-      child: Text(widget.options.identifier),
+      child: Text("Missconfigured: ${widget.options.identifier}"),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget child;
+
+    switch (widget.options.type) {
+      case SignType.lottie:
+        child = _lottie(context);
+        break;
+      case SignType.html:
+        child = _html(context);
+        break;
+      case SignType.image:
+        child = _image(context);
+        break;
+      default:
+        child = _text(context);
+        break;
+    }
+
     return GestureDetector(
       onTap: () async {
         widget.onTap?.call(widget.options.identifier);
         if (_hasSound) {
+          await _player.setVolume(1.0);
           await _player.stop();
           await _player.resume();
-          //await _player.play(DeviceFileSource(widget.options.sound));
         }
-        if (_isLottie) {
+        if (widget.options.type == SignType.lottie) {
           await _controller.forward(from: 0);
         }
       },
       child: Container(
-        color: Colors.red, //widget.options.color,
-        child: _isLottie
-            ? _lottie(context)
-            : _isHtml
-                ? _html(context)
-                : _text(context),
+        color: Colors.black,
+        child: child,
       ),
     );
   }

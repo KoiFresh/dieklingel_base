@@ -1,6 +1,16 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
+import 'package:yaml/yaml.dart';
 part 'sign_options.g.dart';
+
+enum SignType {
+  none,
+  lottie,
+  html,
+  image;
+}
 
 @HiveType(typeId: 2)
 class SignOptions extends HiveObject {
@@ -13,32 +23,50 @@ class SignOptions extends HiveObject {
   final String identifier;
 
   @HiveField(1)
-  final String lottie;
+  final String file;
 
   @HiveField(2)
-  final String html;
+  final String? sound;
 
   @HiveField(3)
-  final String sound;
+  int _type = SignType.none.index;
 
-  @HiveField(4)
-  final Color color;
+  SignType get type => SignType.values.firstWhere(
+        (element) => element.index == _type,
+        orElse: () => SignType.none,
+      );
 
   SignOptions({
     required this.identifier,
-    required this.lottie,
+    required this.file,
     required this.sound,
-    required this.color,
-    required this.html,
-  });
+  }) {
+    if (identifier.isEmpty) {
+      throw "Cannot create Sign with an empty identifier";
+    }
+    if (file.isEmpty) {
+      throw "Cannot create Sign $identifier with an empty file";
+    }
 
-  factory SignOptions.fromMap(Map<String, dynamic> json) {
+    if (file.endsWith(".lottie") || file.endsWith(".json")) {
+      _type = SignType.lottie.index;
+    } else if (file.endsWith(".html")) {
+      _type = SignType.html.index;
+    } else if (file.endsWith(".png") ||
+        file.endsWith(".jpeg") ||
+        file.endsWith(".jpg")) {
+      _type = SignType.image.index;
+    } else {
+      _type = SignType.none.index;
+      throw "Cannot create Sign $identifier with file $file, extension is not supportet. Supportet extionses are: .lottie, .json, .html, .png, .jpeg, .jpg";
+    }
+  }
+
+  factory SignOptions.fromYaml(YamlMap yaml) {
     return SignOptions(
-      identifier: json["identifier"] ?? "",
-      lottie: json["lottie"] ?? "",
-      sound: json["sound"] ?? "",
-      html: json["html"] ?? "",
-      color: Colors.black,
+      identifier: yaml["identifier"] ?? "",
+      file: yaml["file"] ?? "",
+      sound: yaml["sound"] ?? "",
     );
   }
 
@@ -53,6 +81,6 @@ class SignOptions extends HiveObject {
 
   @override
   String toString() {
-    return "identifier: $identifier; lottie: $lottie; sound: $sound, color: $color;";
+    return "identifier: $identifier; file: $file; sound: $sound;";
   }
 }

@@ -2,34 +2,40 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
-import 'package:dieklingel_base/blocs/app_bloc.dart';
+import 'package:dieklingel_base/blocs/app_view_bloc.dart';
+import 'package:dieklingel_base/models/sign_options.dart';
 import 'package:dieklingel_base/touch_scroll_behavior.dart';
 import 'package:dieklingel_base/view_models/home_view_model.dart';
+import 'package:dieklingel_base/views/components/sign.dart';
 import 'package:dieklingel_base/views/home_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:yaml/yaml.dart';
 import 'messaging/mclient.dart';
 import 'models/ice_server.dart';
 import 'models/mqtt_uri.dart';
+import 'views/app_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Map<String, dynamic> config = await getConfig();
-
-  //await configure(config);
-
   await Hive.initFlutter();
   Hive
     ..registerAdapter(MqttUriAdapter())
+    ..registerAdapter(SignOptionsAdapter())
     ..registerAdapter(IceServerAdapter());
 
   await Future.wait([
     Hive.openBox<IceServer>((IceServer).toString()),
+    Hive.openBox<SignOptions>((SignOptions).toString()),
     Hive.openBox("settings"),
   ]);
+
+  await configure(await getConfig());
 
   runApp(
     MultiProvider(
@@ -39,20 +45,18 @@ void main() async {
         ),
       ],
       child: BlocProvider(
-        bloc: AppBloc(),
-        child: MyApp(
-          config: config,
-        ),
+        bloc: AppViewBloc(),
+        child: MyApp(),
       ),
     ),
   );
 }
 
-Future<Map<String, dynamic>> getConfig() async {
-  Map<String, dynamic> result = {};
+Future<YamlMap> getConfig() async {
+  YamlMap result = YamlMap();
   try {
-    final configFile = File("/etc/dieklingel/config.json");
-    result = await jsonDecode(
+    final configFile = File("/etc/dieklingel/config.yaml");
+    result = await loadYaml(
       await configFile.readAsString(),
     );
   } catch (exception) {
@@ -61,7 +65,7 @@ Future<Map<String, dynamic>> getConfig() async {
   return result;
 }
 
-Future<void> configure(Map<String, dynamic> config) async {
+Future<void> configure(YamlMap config) async {
   Box settings = Hive.box("settings");
 
   settings.put(
@@ -111,57 +115,18 @@ Future<void> configure(Map<String, dynamic> config) async {
     "screensaver.file",
     config["screensaver"]?["file"] as String? ?? "",
   );
-}
 
-class MyApp extends StatefulWidget {
-  final Map<String, dynamic> config;
+  await SignOptions.boxx.clear();
+  for (YamlMap sign in config["signs"]) {
+    SignOptions options;
 
-  const MyApp({super.key, this.config = const {}});
+    try {
+      options = SignOptions.fromYaml(sign);
+    } catch (exception) {
+      stdout.writeln("Skip Sign: $exception");
+      continue;
+    }
 
-  @override
-  State<MyApp> createState() => _MyApp();
-}
-
-class _MyApp extends State<MyApp> {
-  @override
-  Widget build(BuildContext context) {
-    EdgeInsets insets = EdgeInsets.fromLTRB(
-      double.parse(
-        widget.config["viewport"]?["clip"]?["left"]?.toString() ?? "0",
-      ),
-      double.parse(
-        widget.config["viewport"]?["clip"]?["top"].toString() ?? "0",
-      ),
-      double.parse(
-        widget.config["viewport"]?["clip"]?["right"].toString() ?? "0",
-      ),
-      double.parse(
-        widget.config["viewport"]?["clip"]?["bottom"].toString() ?? "0",
-      ),
-    );
-
-    return StreamBuilder(
-      stream: context.bloc<AppBloc>().clip,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<EdgeInsets> snapshot,
-      ) {
-        return Container(
-          color: Colors.black,
-          padding: snapshot.data,
-          child: ClipRRect(
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            borderRadius: BorderRadius.circular(20),
-            child: CupertinoApp(
-              scrollBehavior: TouchScrollBehavior(),
-              home: HomeView(
-                vm: HomeViewModel(),
-                config: widget.config,
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    await options.save();
   }
 }

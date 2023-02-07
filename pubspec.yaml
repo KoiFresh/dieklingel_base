@@ -50,6 +50,7 @@ dependencies:
   lottie: ^2.2.0
   audioplayers: ^2.0.0
   rxdart: ^0.27.7
+  yaml: ^3.1.1
 
 dev_dependencies:
   flutter_test:

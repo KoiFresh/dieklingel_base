@@ -1,52 +1,38 @@
-import 'dart:io';
-
+import '/bloc/bloc_provider.dart';
+import 'package:dieklingel_base/blocs/sign_view_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
-import 'package:dieklingel_base/view_models/sign_view_model.dart';
-import 'package:dieklingel_base/views/components/sign.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
-import 'package:provider/provider.dart';
 
-class SignView extends StatefulWidget {
-  final SignViewModel vm;
-  final Map<String, dynamic> config;
+import 'components/sign.dart';
 
-  SignView({
-    required this.vm,
-    this.config = const {},
-    super.key,
-  }) {
-    vm.init(config: config);
-  }
-
-  @override
-  State<StatefulWidget> createState() => _SignView();
-}
-
-class _SignView extends State<SignView> with TickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this);
-
-  @override
-  void initState() {
-    super.initState();
-  }
+class SignView extends StatelessWidget {
+  const SignView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: widget.vm,
-      builder: (context, child) => PageView(
-        scrollDirection: Axis.vertical,
-        children: List.generate(
-          context.watch<SignViewModel>().options.length,
-          (index) {
-            SignOptions option = context.watch<SignViewModel>().options[index];
+    return StreamBuilder(
+      stream: context.bloc<SignViewBloc>().options,
+      builder: (
+        BuildContext context,
+        AsyncSnapshot<List<SignOptions>> snapshot,
+      ) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-            return Sign(options: option);
+        List<SignOptions> options = snapshot.data!;
+
+        return ListView.builder(
+          itemCount: options.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Sign(
+              options: options[index],
+            );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }

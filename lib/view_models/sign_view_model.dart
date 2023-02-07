@@ -12,10 +12,10 @@ class SignViewModel extends ChangeNotifier {
 
     List<dynamic> configuarations = config["signs"] ?? [];
     options.clear();
-    for (dynamic conf in configuarations) {
+    /* for (dynamic conf in configuarations) {
       SignOptions option = SignOptions.fromMap(conf);
       options.add(option);
-    }
+    }*/
 
     notifyListeners();
   }

@@ -1,0 +1,63 @@
+# ever webrtc config related thing, like used ice servers
+webrtc:
+  ice:
+    ice-servers:
+      - urls: stun:stun1.l.google.com:19302
+      - urls: stun:stun1.l.google.com:19302
+        username: adsa
+        credentials: ada
+
+# mqtt connection related thins, like the uri in format:
+# <protocoll>://<host>:<port>/<channel> e.g.
+# mqtt://server.dieklingel.com:1883/my/default/channel/
+mqtt:
+  uri: dasdsada
+  username: ddasdas
+  password: dasddsadas
+
+# viewport related things, like clip borders
+viewport:
+  clip:
+    top: 15
+    right: 35
+    bottom: 10
+    left: 10
+
+# configuration for signs displayed on the main page
+signs:
+  - identifier: default
+    file: /abs/path/file<.lottie>|<.json>|<.html>|<.png>|<.jpeg>|<.jpg>
+    sound: /abs/path/file<.wav>|<.mp3>
+  - identifier: default2
+    file: /abs/path/file.<lottie>|<.json>|<.html>|<.png>|<.jpeg>|<.jpg>
+    sound: /abs/path/file<.wav>|<.mp3>
+
+screensaver:
+  enabled: true
+  file: /abs/path/file.<lottie>|<.json>|<.html>|<.png>|<.jpeg>|<.jpg>
+
+passcode:
+  enabled: true
+  keypad:
+    enabled: true
+  buttons:
+    - channel: config/my/button
+      payload: light1
+      text: use text and or icon
+      icon: /abs/path/file<.png>|<.jpeg>|<.jpg>
+    - channel: config/my/button/light2
+      payload: sha265(${passcode})
+      text: use text and or icon
+      icon: /abs/path/file<.png>|<.jpeg>|<.jpg>
+
+gipo:
+  chip: print-dasda
+  movement:
+    enabled: true
+    pin: 14
+  nfc:
+    enabled: true
+    pin: 18
+  fingerprint:
+    enables: true
+    pin: 12

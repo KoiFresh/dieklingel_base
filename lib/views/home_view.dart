@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:dieklingel_base/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/view_models/home_view_model.dart';
 import 'package:dieklingel_base/view_models/sign_view_model.dart';
 import 'package:dieklingel_base/views/passcode_view.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../blocs/sign_view_bloc.dart';
 import '../models/mqtt_uri.dart';
 import 'sign_view.dart';
 
@@ -24,7 +26,7 @@ class HomeView extends StatefulWidget {
 class _HomeView extends State<HomeView> {
   @override
   void initState() {
-    init();
+    //init();
     super.initState();
   }
 
@@ -42,14 +44,14 @@ class _HomeView extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      child: PageView(
-        children: [
-          SignView(
-            vm: SignViewModel(),
-            config: widget.config,
-          ),
-          const PasscodeView(),
-        ],
+      child: BlocProvider(
+        bloc: SignViewBloc(),
+        child: PageView(
+          children: const [
+            SignView(),
+            PasscodeView(),
+          ],
+        ),
       ),
     );
   }
