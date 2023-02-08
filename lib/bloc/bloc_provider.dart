@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/single_child_widget.dart';
 
 import 'bloc.dart';
 
-class BlocProvider<T extends Bloc> extends StatefulWidget {
-  final Widget child;
+class BlocProvider<T extends Bloc> extends SingleChildStatefulWidget {
   final T bloc;
 
   const BlocProvider({
     required this.bloc,
-    required this.child,
+    super.child,
     super.key,
   });
 
@@ -21,10 +21,10 @@ class BlocProvider<T extends Bloc> extends StatefulWidget {
   State<StatefulWidget> createState() => _BlocProvider();
 }
 
-class _BlocProvider extends State<BlocProvider> {
+class _BlocProvider extends SingleChildState<BlocProvider> {
   @override
-  Widget build(BuildContext context) {
-    return widget.child;
+  Widget buildWithChild(BuildContext context, Widget? child) {
+    return child ?? Container();
   }
 
   @override

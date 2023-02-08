@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/blocs/app_view_bloc.dart';
+import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:yaml/yaml.dart';
+import 'bloc/multi_bloc_provider.dart';
 import 'messaging/mclient.dart';
 import 'models/ice_server.dart';
 import 'models/mqtt_uri.dart';
@@ -37,8 +39,11 @@ void main() async {
           create: ((context) => MClient()),
         ),
       ],
-      child: BlocProvider(
-        bloc: AppViewBloc(),
+      child: MutliBlocProvider(
+        blocs: [
+          BlocProvider(bloc: AppViewBloc()),
+          BlocProvider(bloc: MqttClientBloc()),
+        ],
         child: MyApp(),
       ),
     ),
