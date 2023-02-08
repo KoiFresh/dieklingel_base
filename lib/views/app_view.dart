@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
+import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../blocs/app_view_bloc.dart';
+import '../models/mqtt_uri.dart';
 import '../touch_scroll_behavior.dart';
 import '../view_models/home_view_model.dart';
 import 'home_view.dart';
@@ -17,6 +21,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyApp extends State<MyApp> {
+  @override
+  void initState() {
+    MqttClientBloc mqtt = context.bloc<MqttClientBloc>();
+    mqtt.uri.add(
+      MqttUri(
+        host: "server.dieklingel.com",
+        port: 1883,
+        channel: "com.dieklingel/",
+      ),
+    );
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
