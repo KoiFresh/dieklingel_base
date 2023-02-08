@@ -5,10 +5,10 @@ import 'package:provider/single_child_widget.dart';
 
 import 'bloc.dart';
 
-class MutliBlocProvider<T extends Bloc> extends SingleChildStatelessWidget {
+class MultiBlocProvider<T extends Bloc> extends SingleChildStatelessWidget {
   final List<BlocProvider<T>> blocs;
 
-  const MutliBlocProvider({
+  const MultiBlocProvider({
     required this.blocs,
     super.child,
     super.key,

@@ -39,7 +39,7 @@ void main() async {
           create: ((context) => MClient()),
         ),
       ],
-      child: MutliBlocProvider(
+      child: MultiBlocProvider(
         blocs: [
           BlocProvider(bloc: AppViewBloc()),
           BlocProvider(bloc: MqttClientBloc()),
