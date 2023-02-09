@@ -54,6 +54,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
     return Lottie.file(
       lottiefile,
       controller: _controller,
+      fit: BoxFit.contain,
       onLoaded: (composition) {
         _controller.duration = composition.duration;
       },
@@ -87,6 +88,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
   Widget _image(BuildContext context) {
     return Image.file(
       File(widget.options.file),
+      fit: BoxFit.contain,
     );
   }
 
@@ -128,7 +130,7 @@ class _Sign extends State<Sign> with SingleTickerProviderStateMixin {
         }
       },
       child: Container(
-        color: Colors.black,
+        color: Colors.red,
         child: child,
       ),
     );
