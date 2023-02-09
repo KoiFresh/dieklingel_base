@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/blocs/app_view_bloc.dart';
+import 'package:dieklingel_base/blocs/mqtt_channel_constants.dart';
 import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
+import 'package:dieklingel_base/models/sign_payload.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -27,16 +30,27 @@ void main() async {
   Hive
     ..registerAdapter(MqttUriAdapter())
     ..registerAdapter(SignOptionsAdapter())
-    ..registerAdapter(IceServerAdapter());
+    ..registerAdapter(IceServerAdapter())
+    ..registerAdapter(SignPayloadAdapter());
 
   await Future.wait([
     Hive.openBox<IceServer>((IceServer).toString()),
     Hive.openBox<SignOptions>((SignOptions).toString()),
+    Hive.openBox<SignPayload>((SignPayload).toString()),
     Hive.openBox("settings"),
   ]);
 
   await configure(await getConfig());
   await setup(mqttbloc);
+
+  Timer.periodic(Duration(seconds: 1), (Timer timer) {
+    GetIt.I<MqttClientBloc>().message.add(
+          MapEntry(
+            kSystemPing,
+            DateTime.now().toIso8601String(),
+          ),
+        );
+  });
 
   runApp(
     MultiProvider(
