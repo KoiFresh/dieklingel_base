@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:dieklingel_base/bloc/stream_event.dart';
 import 'package:dieklingel_base/blocs/mqtt_state_mixin.dart';
-import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
-import 'package:rxdart/rxdart.dart';
 
 import '/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/blocs/sign_view_bloc.dart';
@@ -21,20 +19,16 @@ class SignView extends StatefulWidget {
 
 class _SignView extends State<SignView>
     with AutomaticKeepAliveClientMixin, MqttStateMixin {
+  late final StreamSubscription<ActivityState> _activity;
   final _controller = ScrollController();
 
   @override
   void initState() {
-    activityStream(context).listen((event) {
-      print("aa");
-    });
-
-    /* Stream<ActivityStreamEvent> stream = context.bloc<SignViewBloc>().activity;
-    _subscription = stream.listen((event) {
-      if (!event.isActive) {
+    _activity = activity.listen((event) {
+      if (event is InactiveState) {
         _controller.jumpTo(0);
       }
-    });*/
+    });
 
     super.initState();
   }
@@ -63,7 +57,7 @@ class _SignView extends State<SignView>
             return Sign(
               options: options[index],
               onTap: (hash) {
-                context.bloc<SignViewBloc>().click.add(options[index]);
+                context.bloc<SignViewBloc>().onClick.add(options[index]);
               },
             );
           },
@@ -77,6 +71,7 @@ class _SignView extends State<SignView>
 
   @override
   void dispose() {
+    _activity.cancel();
     super.dispose();
   }
 }

@@ -27,7 +27,7 @@ class MqttClientBloc extends Bloc {
 
   Sink<MqttUri?> get uri => _uri.sink;
   Stream<MClientState> get state => _state.stream;
-  Sink<MapEntry<String, String>> get message => _message.sink;
+  StreamSink<MapEntry<String, String>> get message => _message.sink;
 
   MqttClient? _client;
 

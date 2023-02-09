@@ -6,6 +6,7 @@ import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:yaml/yaml.dart';
@@ -18,6 +19,10 @@ import 'views/app_view.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  MqttClientBloc mqttbloc = MqttClientBloc();
+
+  GetIt.I.registerSingleton(mqttbloc);
+
   await Hive.initFlutter();
   Hive
     ..registerAdapter(MqttUriAdapter())
@@ -29,8 +34,6 @@ void main() async {
     Hive.openBox<SignOptions>((SignOptions).toString()),
     Hive.openBox("settings"),
   ]);
-
-  MqttClientBloc mqttbloc = MqttClientBloc();
 
   await configure(await getConfig());
   await setup(mqttbloc);

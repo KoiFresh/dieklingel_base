@@ -52,6 +52,7 @@ dependencies:
   rxdart: ^0.27.7
   yaml: ^3.1.1
   nested: ^1.0.0
+  get_it: ^7.2.0
 
 dev_dependencies:
   flutter_test:

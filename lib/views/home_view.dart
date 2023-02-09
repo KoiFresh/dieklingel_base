@@ -33,7 +33,7 @@ class _HomeView extends State<HomeView> with MqttStateMixin {
 
   @override
   void initState() {
-    _activity = activityStream(context).listen((event) {
+    _activity = activity.listen((event) {
       if (event is InactiveState) {
         _controller.jumpToPage(0);
       }
@@ -68,7 +68,7 @@ class _HomeView extends State<HomeView> with MqttStateMixin {
           BlocProvider(bloc: ScreensaverViewBloc()),
         ],
         child: StreamBuilder(
-          stream: displayStream(context),
+          stream: display,
           builder: (context, AsyncSnapshot<DisplayState> snapshot) {
             if (snapshot.data is DisplayOffState) {
               return ScreensaverView();
