@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
+import 'package:dieklingel_base/blocs/home_view_bloc.dart';
 import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -51,9 +52,12 @@ class _MyApp extends State<MyApp> {
             borderRadius: BorderRadius.circular(20),
             child: CupertinoApp(
               scrollBehavior: TouchScrollBehavior(),
-              home: HomeView(
-                vm: HomeViewModel(),
-                config: widget.config,
+              home: BlocProvider(
+                bloc: HomeViewBloc(),
+                child: HomeView(
+                  vm: HomeViewModel(),
+                  config: widget.config,
+                ),
               ),
             ),
           ),

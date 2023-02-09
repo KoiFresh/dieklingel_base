@@ -8,7 +8,7 @@ import 'package:lottie/lottie.dart';
 
 class Sign extends StatefulWidget {
   final SignOptions options;
-  final Function(String hash)? onTap;
+  final void Function(String hash)? onTap;
 
   const Sign({
     required this.options,

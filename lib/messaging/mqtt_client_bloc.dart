@@ -13,8 +13,11 @@ import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
 import '../models/mqtt_uri.dart';
 
+typedef Filter = String? Function(String);
+
 class MqttClientBloc extends Bloc {
   final Map<String, BehaviorSubject<String>> _subscribtions = {};
+  final Map<String, String? Function(String)> _filters = {};
 
   final _uri = BehaviorSubject<MqttUri?>();
   final _username = BehaviorSubject<String>.seeded("");
@@ -85,6 +88,27 @@ class MqttClientBloc extends Bloc {
       List<int> messageAsBytes = rec.payload.message;
       String message = utf8.decode(messageAsBytes);
 
+      for (MapEntry<String, Filter> entry in _filters.entries) {
+        List<String> channels =
+            "${_uri.value!.channel}/${entry.key}".split("/");
+        channels.removeWhere((element) => element.isEmpty);
+        String channel = channels.join("/");
+
+        RegExp regExp = RegExp(
+          channel.replaceAll("\\+", "[^/]+").replaceAll("#", ".+"),
+        );
+
+        if (!regExp.hasMatch(topic)) {
+          continue;
+        }
+
+        String? modified = entry.value(message);
+        if (modified == null) {
+          return;
+        }
+        message = modified;
+      }
+
       _subscribtions.forEach((key, value) {
         List<String> channels = "${_uri.value!.channel}/$key".split("/");
         channels.removeWhere((element) => element.isEmpty);
@@ -103,6 +127,10 @@ class MqttClientBloc extends Bloc {
     });
 
     _client?.subscribe("${uri.channel}#", MqttQos.exactlyOnce);
+  }
+
+  void filter(String channel, String? Function(String) filter) {
+    _filters[channel] = filter;
   }
 
   Stream<String> watch(String channel) {

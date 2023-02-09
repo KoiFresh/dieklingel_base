@@ -30,7 +30,10 @@ void main() async {
     Hive.openBox("settings"),
   ]);
 
+  MqttClientBloc mqttbloc = MqttClientBloc();
+
   await configure(await getConfig());
+  await setup(mqttbloc);
 
   runApp(
     MultiProvider(
@@ -42,7 +45,7 @@ void main() async {
       child: MultiBlocProvider(
         blocs: [
           BlocProvider(bloc: AppViewBloc()),
-          BlocProvider(bloc: MqttClientBloc()),
+          BlocProvider(bloc: mqttbloc),
         ],
         child: MyApp(),
       ),
@@ -61,6 +64,22 @@ Future<YamlMap> getConfig() async {
     // could not load, do nothing
   }
   return result;
+}
+
+Future<void> setup(MqttClientBloc bloc) async {
+  Box settings = Hive.box("settings");
+
+  bloc.filter("display/state", (String message) {
+    if (settings.get("screensaver.enabled") as bool) {
+      if (message.toLowerCase().trim() == "off") {
+        return "off";
+      } else if (message.toLowerCase().trim() == "on") {
+        return "on";
+      }
+    }
+
+    return null;
+  });
 }
 
 Future<void> configure(YamlMap config) async {
