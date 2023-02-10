@@ -9,7 +9,7 @@ mixin MqttStateMixin {
   Stream<ActivityState> get activity {
     return GetIt.I<MqttClientBloc>().watch(kIoActivityState).map(
       (event) {
-        return event.toLowerCase().trim() == "inactive"
+        return event.value.toLowerCase().trim() == "inactive"
             ? InactiveState()
             : ActiveState();
       },
@@ -19,7 +19,7 @@ mixin MqttStateMixin {
   Stream<DisplayState> get display {
     return GetIt.I<MqttClientBloc>().watch(kIoDisplayState).map(
       (event) {
-        return event.toLowerCase().trim() == "off"
+        return event.value.toLowerCase().trim() == "off"
             ? DisplayOffState()
             : DisplayOnState();
       },

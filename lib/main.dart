@@ -43,15 +43,6 @@ void main() async {
   await configure(await getConfig());
   await setup(mqttbloc);
 
-  Timer.periodic(Duration(seconds: 1), (Timer timer) {
-    GetIt.I<MqttClientBloc>().message.add(
-          MapEntry(
-            kSystemPing,
-            DateTime.now().toIso8601String(),
-          ),
-        );
-  });
-
   runApp(
     MultiProvider(
       providers: [
@@ -84,6 +75,10 @@ Future<YamlMap> getConfig() async {
 }
 
 Future<void> setup(MqttClientBloc bloc) async {
+  bloc.answer("request/test/+", (message) async {
+    return "Ok";
+  });
+
   Box settings = Hive.box("settings");
 
   bloc.filter("display/state", (String message) {

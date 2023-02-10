@@ -13,11 +13,13 @@ import 'mqtt_server_client_factory.dart'
     if (dart.library.js) 'mqtt_browser_client_factory.dart';
 import '../models/mqtt_uri.dart';
 
-typedef Filter = String? Function(String);
+typedef ChannelMessage = MapEntry<String, String>;
+typedef FilterFunction = String? Function(String);
+typedef HandlerFunction = Future<String> Function(String);
 
 class MqttClientBloc extends Bloc {
-  final Map<String, BehaviorSubject<String>> _subscribtions = {};
-  final Map<String, String? Function(String)> _filters = {};
+  final Map<String, BehaviorSubject<ChannelMessage>> _subscribtions = {};
+  final Map<String, FilterFunction> _filters = {};
 
   final _uri = BehaviorSubject<MqttUri?>();
   final _username = BehaviorSubject<String>.seeded("");
@@ -84,11 +86,11 @@ class MqttClientBloc extends Bloc {
 
     _client?.updates!.listen((event) {
       MqttPublishMessage rec = event[0].payload as MqttPublishMessage;
-      String topic = event[0].topic;
+      final String topic = event[0].topic;
       List<int> messageAsBytes = rec.payload.message;
       String message = utf8.decode(messageAsBytes);
 
-      for (MapEntry<String, Filter> entry in _filters.entries) {
+      for (MapEntry<String, FilterFunction> entry in _filters.entries) {
         List<String> channels =
             "${_uri.value!.channel}/${entry.key}".split("/");
         channels.removeWhere((element) => element.isEmpty);
@@ -109,18 +111,19 @@ class MqttClientBloc extends Bloc {
         message = modified;
       }
 
+      // TODO(KoiFresh): use for loop
       _subscribtions.forEach((key, value) {
         List<String> channels = "${_uri.value!.channel}/$key".split("/");
         channels.removeWhere((element) => element.isEmpty);
         String channel = channels.join("/");
 
         RegExp regExp = RegExp(
-          channel.replaceAll("\\+", "[^/]+").replaceAll("#", ".+"),
-        );
+            "^${channel.replaceAll("/+", "/[^/]+").replaceAll("#", ".+")}\$");
 
         if (regExp.hasMatch(topic)) {
-          if (!value.hasValue || value.value != message) {
-            value.add(message);
+          if (!value.hasValue || value.value.value != message) {
+            value.add(ChannelMessage(
+                topic.replaceFirst(_uri.value?.channel ?? "", ""), message));
           }
         }
       });
@@ -133,8 +136,8 @@ class MqttClientBloc extends Bloc {
     _filters[channel] = filter;
   }
 
-  Stream<String> watch(String channel) {
-    StreamController<String> controller = _subscribtions.putIfAbsent(
+  Stream<ChannelMessage> watch(String channel) {
+    StreamController<ChannelMessage> controller = _subscribtions.putIfAbsent(
       channel,
       () => BehaviorSubject(),
     );
@@ -158,7 +161,6 @@ class MqttClientBloc extends Bloc {
       topic,
       MqttQos.exactlyOnce,
       builder.payload!,
-      retain: true,
     );
   }
 
@@ -179,3 +181,19 @@ class MqttClientBloc extends Bloc {
     });
   }
 }
+
+extension Handle on MqttClientBloc {
+  StreamSubscription<ChannelMessage> answer(
+    String channel,
+    HandlerFunction handler,
+  ) {
+    return watch(channel).listen(
+      (event) async {
+        String result = await handler(event.value);
+        message.add(ChannelMessage("${event.key}/response", result));
+      },
+    );
+  }
+}
+
+extension Get on MqttClientBloc {}
