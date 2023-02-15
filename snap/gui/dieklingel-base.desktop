@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=dieklingel-base
+Comment=Super Cool App that does everything
+Exec=dieklingel
+Icon=${SNAP}/meta/gui/dieklingel-base.png # replace name to your app name
+Terminal=false
+Type=Application
+Categories=Education; #adjust accordingly your snap category

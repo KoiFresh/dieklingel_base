@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dieklingel_base/bloc/bloc_provider.dart';
 import 'package:dieklingel_base/blocs/app_view_bloc.dart';
 import 'package:dieklingel_base/blocs/mqtt_channel_constants.dart';
+import 'package:dieklingel_base/blocs/rtc_client_bloc.dart';
 import 'package:dieklingel_base/messaging/mqtt_client_bloc.dart';
 import 'package:dieklingel_base/models/sign_options.dart';
 import 'package:dieklingel_base/models/sign_payload.dart';
@@ -25,6 +26,7 @@ void main() async {
   MqttClientBloc mqttbloc = MqttClientBloc();
 
   GetIt.I.registerSingleton(mqttbloc);
+  GetIt.I.registerSingleton(RtcClientBloc());
 
   await Hive.initFlutter();
   Hive
