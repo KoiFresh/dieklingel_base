@@ -37,7 +37,7 @@ class ScreensaverView extends StatelessWidget {
           style: {
             "body": Style(
               padding: EdgeInsets.zero,
-              margin: EdgeInsets.zero,
+//              margin: EdgeInsets.zero,
             )
           },
         );

@@ -1,0 +1,26 @@
+name: dieklingel-base
+version: '1.0.4'
+summary: Base Unit for dieKlinge
+description: Base Unit for dieKlingel
+confinement: strict
+base: core18
+grade: stable
+parts:
+  dieklingel-base:
+    plugin: flutter
+    source: .
+    flutter-target: lib/main.dart
+    override-build: |
+      flutter pub get
+      flutter pub run build_runner build --delete-conflicting-outputs
+      snapcraftctl build
+    build-packages:
+      - libgstreamer1.0-dev
+      - libgstreamer-plugins-base1.0-dev
+    stage-packages:
+      - libgstreamer1.0-dev
+      - libgstreamer-plugins-base1.0-dev
+apps:
+  dieklingel-base:
+    command: dieklingel_base
+    extensions: [flutter-stable]
