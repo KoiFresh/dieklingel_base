@@ -1,5 +1,7 @@
 # dieklingel_base
 
+> 2024-03-19 NOTE: you probably should no longer use `dieklingel_base`. If you where looking for the dieKlingel project, checkout <https://dieklingel.com/>. If you intended to navigated to the `dieklingel_base` repository, you should migrate to [dieklingel-core](https://github.com/koifresh/dieklingel-core/).
+
 ![alt dieKlingel Logo und Text](https://dieklingel.de/_nuxt/image/5577c6.webp)
 
 Dieses Projekt beinhaltet die Basis des dieKlingel Projeckts.
